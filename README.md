@@ -39,13 +39,13 @@
 
 ## 공개 주소와 배포 (2026-09-30)
 
-- 저장소: https://github.com/Jeon0976/pantrip-site
+- 저장소: https://github.com/pantrip/pantrip-site
 - 공식 안내: https://pantrip.app/ · https://www.pantrip.app/
 - 개인정보: https://pantrip.app/privacy.html (언어 선택) · https://pantrip.app/privacy/en.html
 - 이용약관: https://pantrip.app/terms.html (언어 선택) · https://pantrip.app/terms/en.html
 - 고객지원: https://pantrip.app/support.html (언어 선택) · https://pantrip.app/support/en.html
 - AdMob 인증 파일: https://pantrip.app/app-ads.txt — 기존 https://jeon0976.github.io/app-ads.txt 도 계속 제공하며 동일한 게시자 선언을 유지합니다.
-- GitHub Pages 호환 미러: https://jeon0976.github.io/pantrip-site/
+- GitHub Pages 호환 미러: https://pantrip.github.io/pantrip-site/
 - 운영자 전용: https://admin.pantrip.app/ (소유자 비공개; 이전 GitHub Pages `/admin/`은 이 주소로 이동)
 - API 문서: https://api.pantrip.app/ (소유자 비공개)
 
