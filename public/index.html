@@ -23,63 +23,65 @@
 <main id="main">
 
 <section class="panel cream hero">
-<div class="wrap hero-grid">
+<div class="wrap hero-layout">
 <div class="hero-copy">
-<p class="eyebrow"><span class="dot" aria-hidden="true"></span><span data-ko="iPhone 앱 · 식품과 나만의 주방" data-en="iPhone app · Food &amp; your own kitchen">iPhone 앱 · 식품과 나만의 주방</span></p>
-<h1 class="brand-title">Pantrip: Food &amp; Kitchen</h1>
-<p class="lead" data-ko="우리 집 식품을 한눈에" data-en="Your food, at a glance">우리 집 식품을 한눈에</p>
-<p class="sub" data-ko="무엇이 있는지, 언제까지 먹을지." data-en="See what you have and when to use it.">무엇이 있는지, 언제까지 먹을지.</p>
+<h1 class="brand-title" data-ko="우리 집 식품을 한눈에" data-en="Your food, at a glance">우리 집 식품을 한눈에</h1>
 <div class="actions"><a class="button primary" href="#photo" data-ko="어떻게 쓰나요 ↓" data-en="See how it works ↓">어떻게 쓰나요 ↓</a><a class="button secondary" href="#kitchens" data-ko="주방 둘러보기 ↓" data-en="Browse kitchens ↓">주방 둘러보기 ↓</a></div>
 </div>
-<figure class="hero-shot">
-<div class="phone"><img id="hero-capture" src="assets/hero-ko.webp" data-ko-src="assets/hero-ko.webp" data-en-src="assets/hero-en.webp" width="720" height="1565" alt="Pantrip 앱의 주방 화면. 한옥 주방 속 '우리 집 보관함'과 물품 등록 버튼이 보입니다." data-ko-alt="Pantrip 앱의 주방 화면. 한옥 주방 속 '우리 집 보관함'과 물품 등록 버튼이 보입니다." data-en-alt="The Pantrip Kitchen screen showing Home Storage inside a car factory kitchen, with the Add item button." fetchpriority="high"></div>
-<figcaption class="note" data-ko="실제 앱 화면 · 예시 식품" data-en="Actual app screen · sample items">실제 앱 화면 · 예시 식품</figcaption>
-</figure>
+<div class="demo-stage">
+<div class="phone">
+<div class="phone-screen">
+<img id="demo-poster" src="assets/pantrip-demo-en-poster.jpg" data-fallback-src="assets/hero-en.webp" width="720" height="1565" alt="Pantrip 앱의 주방 화면" data-ko-alt="Pantrip 앱의 주방 화면" data-en-alt="The Pantrip Kitchen screen" fetchpriority="high">
+<video id="demo-video" src="assets/pantrip-demo-en.mp4" poster="assets/pantrip-demo-en-poster.jpg" width="720" height="1565" muted loop playsinline preload="metadata" aria-label="Pantrip 앱 데모" data-ko-aria="Pantrip 앱 데모" data-en-aria="Pantrip app demo"></video>
+</div>
+</div>
+<div class="demo-controls">
+<div class="demo-chapters" id="demo-chapters" aria-label="데모 장면" data-ko-aria="데모 장면" data-en-aria="Demo chapters" hidden>
+<button type="button" data-demo-time="0" data-ko="주방" data-en="Kitchen" aria-pressed="true">주방</button>
+<button type="button" data-demo-time="5" data-ko="사진 등록" data-en="Photo" aria-pressed="false">사진 등록</button>
+<button type="button" data-demo-time="12.5" data-ko="3D" data-en="3D" aria-pressed="false">3D</button>
+<button type="button" data-demo-time="16.5" data-ko="주방들" data-en="Kitchens" aria-pressed="false">주방들</button>
+<button type="button" data-demo-time="20.5" data-ko="위젯" data-en="Widgets" aria-pressed="false">위젯</button>
+</div>
+<button class="demo-toggle" id="demo-toggle" type="button" aria-label="데모 재생" data-ko-aria="데모 재생" data-en-aria="Play demo" disabled>
+<svg id="demo-play-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 11 7-11 7Z"/></svg>
+<svg id="demo-pause-icon" viewBox="0 0 24 24" aria-hidden="true" hidden><path d="M7 5h4v14H7zM14 5h4v14h-4z"/></svg>
+</button>
+</div>
+</div>
 </div>
 </section>
 
 <section class="panel night" id="photo" aria-labelledby="photo-title">
 <div class="wrap">
 <header class="panel-head">
-<p class="eyebrow"><span class="dot" aria-hidden="true"></span><span data-ko="사진 등록" data-en="Add with a photo">사진 등록</span></p>
 <h2 id="photo-title" data-ko="사진으로 간편하게 등록" data-en="Snap a photo. Add your food.">사진으로 간편하게 등록</h2>
-<p class="sub" data-ko="배경은 쏙 빼고, 내 식품만 깔끔하게." data-en="Remove the background. Keep just your food.">배경은 쏙 빼고, 내 식품만 깔끔하게.</p>
 </header>
 <div class="cutout-flow">
-<figure class="photo-before"><figcaption data-ko="원본 사진" data-en="Original photo">원본 사진</figcaption><img src="assets/photo-original.jpg" width="900" height="567" loading="lazy" alt="물방울이 맺힌 사과 두 개를 찍은 원본 사진" data-ko-alt="물방울이 맺힌 사과 두 개를 찍은 원본 사진" data-en-alt="Original photo of two apples with water droplets"></figure>
+<figure class="photo-before"><img src="assets/photo-original.jpg" width="900" height="567" loading="lazy" alt="물방울이 맺힌 사과 두 개를 찍은 원본 사진" data-ko-alt="물방울이 맺힌 사과 두 개를 찍은 원본 사진" data-en-alt="Original photo of two apples with water droplets"></figure>
 <svg class="flow-arrow" viewBox="0 0 48 48" aria-hidden="true"><path d="M6 24h32M27 13l11 11-11 11"/></svg>
-<figure class="photo-after"><figcaption data-ko="배경 제거" data-en="Background removed">배경 제거</figcaption><img src="assets/photo-cutout.webp" width="900" height="585" loading="lazy" alt="배경을 지우고 사과만 남긴 결과" data-ko-alt="배경을 지우고 사과만 남긴 결과" data-en-alt="The same apples with the background removed"></figure>
+<figure class="photo-after"><img src="assets/photo-cutout.webp" width="900" height="585" loading="lazy" alt="배경을 지우고 사과만 남긴 결과" data-ko-alt="배경을 지우고 사과만 남긴 결과" data-en-alt="The same apples with the background removed"></figure>
 </div>
-<ul class="facts">
-<li><strong data-ko="바코드" data-en="Barcode">바코드</strong><span data-ko="바코드를 찍으면 상품 정보를 찾아 줘요. 검색 범위는 국가마다 달라요." data-en="Scan a barcode to look up the product. Coverage varies by country.">바코드를 찍으면 상품 정보를 찾아 줘요. 검색 범위는 국가마다 달라요.</span></li>
-<li><strong data-ko="인쇄된 날짜" data-en="Printed date">인쇄된 날짜</strong><span data-ko="포장에 인쇄된 날짜를 읽어 기한을 채워요. 저장 전에 한 번 확인해 주세요." data-en="Reads the date printed on the package. Check it before saving.">포장에 인쇄된 날짜를 읽어 기한을 채워요. 저장 전에 한 번 확인해 주세요.</span></li>
-</ul>
-<p class="credit"><span data-ko="예시 사과 사진: 미국 농무부 농업연구청(USDA ARS), 퍼블릭 도메인" data-en="Sample apple photo: USDA Agricultural Research Service, public domain">예시 사과 사진: 미국 농무부 농업연구청(USDA ARS), 퍼블릭 도메인</span> · <a href="https://commons.wikimedia.org/wiki/File:Fuji_apple.jpg" data-ko="출처" data-en="Source">출처</a></p>
 </div>
 </section>
 
 <section class="panel sand" id="shapes" aria-labelledby="shapes-title">
 <div class="wrap">
 <header class="panel-head">
-<p class="eyebrow"><span class="dot" aria-hidden="true"></span><span data-ko="3D 모양" data-en="3D shapes">3D 모양</span></p>
 <h2 id="shapes-title" data-ko="내 식품을 3D로 차곡차곡" data-en="Your food, now in 3D">내 식품을 3D로 차곡차곡</h2>
-<p class="sub" data-ko="어울리는 모양을 골라 주방에 놓아요." data-en="Pick a shape and find its place.">어울리는 모양을 골라 주방에 놓아요.</p>
 </header>
 <ul class="shape-row">
 <li><img src="assets/product-cup.webp" width="321" height="440" loading="lazy" alt="테이크아웃 컵 모양 3D 모델" data-ko-alt="테이크아웃 컵 모양 3D 모델" data-en-alt="Takeaway cup 3D model"></li>
 <li><img src="assets/product-wine.webp" width="189" height="440" loading="lazy" alt="유리병 모양 3D 모델" data-ko-alt="유리병 모양 3D 모델" data-en-alt="Glass bottle 3D model"></li>
 <li><img src="assets/product-jar.webp" width="292" height="440" loading="lazy" alt="둥근 병 모양 3D 모델" data-ko-alt="둥근 병 모양 3D 모델" data-en-alt="Round bottle 3D model"></li>
 </ul>
-<p class="body" data-ko="물품을 등록할 때 어울리는 모양을 고르면, 그 모양 그대로 주방 보관함에 놓여요. 기본 모양은 무료로 쓸 수 있어요." data-en="Choose a shape when you add an item, and it sits in your kitchen storage just like that. Basic shapes are included free.">물품을 등록할 때 어울리는 모양을 고르면, 그 모양 그대로 주방 보관함에 놓여요. 기본 모양은 무료로 쓸 수 있어요.</p>
 </div>
 </section>
 
 <section class="panel cream" id="kitchens" aria-labelledby="kitchens-title">
 <div class="wrap">
 <header class="panel-head">
-<p class="eyebrow"><span class="dot" aria-hidden="true"></span><span data-ko="주방 테마" data-en="Kitchen themes">주방 테마</span></p>
 <h2 id="kitchens-title" data-ko="취향대로 고르는 나만의 주방" data-en="A kitchen that’s all yours">취향대로 고르는 나만의 주방</h2>
-<p class="sub" data-ko="조선 한양부터 우주선까지, 색다르게 꾸며요." data-en="From Joseon Hanyang to a spaceship, choose a space that feels like you.">조선 한양부터 우주선까지, 색다르게 꾸며요.</p>
 </header>
 <ul class="kitchen-grid" aria-label="주방 테마 12종" data-ko-aria="주방 테마 12종" data-en-aria="12 kitchen themes">
 <li><figure><img src="assets/kitchen-hanok.jpg" width="533" height="320" loading="lazy" alt="조선 한양 주방 테마" data-ko-alt="조선 한양 주방 테마" data-en-alt="Joseon Hanyang kitchen theme"><figcaption data-ko="조선 한양" data-en="Joseon Hanyang">조선 한양</figcaption></figure></li>
@@ -95,25 +97,20 @@
 <li><figure><img src="assets/kitchen-cappadociaCave.jpg" width="533" height="320" loading="lazy" alt="카파도키아 주방 테마" data-ko-alt="카파도키아 주방 테마" data-en-alt="Cappadocia kitchen theme"><figcaption data-ko="카파도키아" data-en="Cappadocia">카파도키아</figcaption></figure></li>
 <li><figure><img src="assets/kitchen-bocageFieldKitchen.jpg" width="533" height="320" loading="lazy" alt="오버룬 야전 주방 테마" data-ko-alt="오버룬 야전 주방 테마" data-en-alt="Overloon field kitchen theme"><figcaption data-ko="오버룬 야전 주방" data-en="Overloon field kitchen">오버룬 야전 주방</figcaption></figure></li>
 </ul>
-<p class="note center" data-ko="앱의 실제 주방 이미지입니다. 일부 주방은 포인트가 필요합니다." data-en="Actual kitchen artwork from the app. Some kitchens require points.">앱의 실제 주방 이미지입니다. 일부 주방은 포인트가 필요합니다.</p>
 </div>
 </section>
 
 <section class="panel night" id="reminders" aria-labelledby="reminders-title">
 <div class="wrap">
 <header class="panel-head">
-<p class="eyebrow"><span class="dot" aria-hidden="true"></span><span data-ko="기한 알림" data-en="Reminders">기한 알림</span></p>
 <h2 id="reminders-title" data-ko="소비기한, 잊기 전에 챙겨요" data-en="Keep track of use-by dates">소비기한, 잊기 전에 챙겨요</h2>
-<p class="sub" data-ko="위젯으로 확인하고, 알림으로 챙겨요." data-en="Check your widgets. Get a timely reminder.">위젯으로 확인하고, 알림으로 챙겨요.</p>
 </header>
 <figure class="widgets">
 <div class="widget-row">
 <img class="widget-medium" src="assets/widget-medium-ko.webp" data-ko-src="assets/widget-medium-ko.webp" data-en-src="assets/widget-medium-en.webp" width="900" height="420" loading="lazy" alt="중간 크기 위젯 예시: 냉장고의 사과 D-0, 우유 D-3, 달걀 D-7" data-ko-alt="중간 크기 위젯 예시: 냉장고의 사과 D-0, 우유 D-3, 달걀 D-7" data-en-alt="Medium widget preview: Fridge with Apple D-0, Milk D-3, Eggs D-7">
 <img class="widget-small" src="assets/widget-small-ko.webp" data-ko-src="assets/widget-small-ko.webp" data-en-src="assets/widget-small-en.webp" width="420" height="420" loading="lazy" alt="작은 위젯 예시: 냉장고의 사과 D-0" data-ko-alt="작은 위젯 예시: 냉장고의 사과 D-0" data-en-alt="Small widget preview: Apple in the Fridge, D-0">
 </div>
-<figcaption class="note" data-ko="위젯 표시 예시 (샘플 데이터)" data-en="Widget preview (sample data)">위젯 표시 예시 (샘플 데이터)</figcaption>
 </figure>
-<p class="body" data-ko="기한 알림은 식품의 안전성을 판단하지 않아요. 상품 표시와 보관 방법을 따라 주세요." data-en="Dates are reminders, not food safety advice. Follow the product label and storage instructions.">기한 알림은 식품의 안전성을 판단하지 않아요. 상품 표시와 보관 방법을 따라 주세요.</p>
 </div>
 </section>
 
@@ -121,13 +118,20 @@
 <div class="wrap">
 <img class="closing-icon" src="assets/apple-touch-icon.png" width="180" height="180" loading="lazy" alt="">
 <h2 id="contact-title" data-ko="도움이 필요하신가요?" data-en="Need a hand?">도움이 필요하신가요?</h2>
-<p class="sub" data-ko="앱 이용, 계정 또는 구매에 도움이 필요하면 연락해 주세요." data-en="Contact us for help with the app, your account, or purchases.">앱 이용, 계정 또는 구매에 도움이 필요하면 연락해 주세요.</p>
 <div class="actions"><a class="button primary" href="mailto:jsh097610@gmail.com" data-ko="메일로 문의하기 ↗" data-en="Email us ↗">메일로 문의하기 ↗</a></div>
 <p class="legal-links"><a href="privacy.html" data-ko="개인정보 처리방침 · 7개 언어" data-en="Privacy policy · 7 languages">개인정보 처리방침 · 7개 언어</a><a href="terms.html" data-ko="서비스 이용약관 · 7개 언어" data-en="Terms of service · 7 languages">서비스 이용약관 · 7개 언어</a><a href="support.html" data-ko="고객지원 및 계정 삭제" data-en="Support and account deletion">고객지원 및 계정 삭제</a></p>
 </div>
 </section>
 
-<details class="signin" id="google-signin">
+<details class="disclosure" id="demo-notes">
+<summary><span data-ko="이미지·데모 안내" data-en="Image &amp; demo notes">이미지·데모 안내</span></summary>
+<p data-ko="영문 데모는 실제 앱 녹화와 상품·주방 렌더 이미지의 편집 장면을 연결했습니다. 식품과 위젯 정보는 예시 데이터입니다." data-en="The English demo combines app recordings with edited product and kitchen renders. Food and widget information is sample data.">영문 데모는 실제 앱 녹화와 상품·주방 렌더 이미지의 편집 장면을 연결했습니다. 식품과 위젯 정보는 예시 데이터입니다.</p>
+<p><span data-ko="예시 사과 사진: 미국 농무부 농업연구청(USDA ARS), 퍼블릭 도메인" data-en="Sample apple photo: USDA Agricultural Research Service, public domain">예시 사과 사진: 미국 농무부 농업연구청(USDA ARS), 퍼블릭 도메인</span> · <a href="https://commons.wikimedia.org/wiki/File:Fuji_apple.jpg" data-ko="출처" data-en="Source">출처</a></p>
+<p data-ko="앱의 실제 주방 이미지입니다. 일부 주방은 포인트가 필요합니다." data-en="Actual kitchen artwork from the app. Some kitchens require points.">앱의 실제 주방 이미지입니다. 일부 주방은 포인트가 필요합니다.</p>
+<p data-ko="기한 알림은 식품의 안전성을 판단하지 않아요. 상품 표시와 보관 방법을 따라 주세요." data-en="Dates are reminders, not food safety advice. Follow the product label and storage instructions.">기한 알림은 식품의 안전성을 판단하지 않아요. 상품 표시와 보관 방법을 따라 주세요.</p>
+</details>
+
+<details class="disclosure" id="google-signin">
 <summary><span data-ko="Google 로그인은 어디에 사용하나요?" data-en="What is Google sign-in used for?">Google 로그인은 어디에 사용하나요?</span></summary>
 <p data-ko="Google 로그인은 Google 계정을 Pantrip 계정에 연결하여 다시 로그인하고 계정의 포인트와 구매한 아이템을 이용하는 데 사용합니다. Google 비밀번호는 Pantrip에 전달되지 않습니다. 식품 동기화에 별도로 동의하면 식품 정보와 사진을 계정에 저장하고 다른 로그인 기기와 동기화합니다. 로그인만으로 식품 동기화가 켜지지는 않습니다. Apple 로그인도 지원합니다." data-en="Google sign-in connects your Google identity to your Pantrip account so you can sign in again and access account points and purchased items. Pantrip does not receive your Google password. If you separately enable food sync, food records and photos are saved to your account and synced with other signed-in devices. Signing in does not automatically enable food sync. Apple sign-in is also supported.">Google 로그인은 Google 계정을 Pantrip 계정에 연결하여 다시 로그인하고 계정의 포인트와 구매한 아이템을 이용하는 데 사용합니다. Google 비밀번호는 Pantrip에 전달되지 않습니다. 식품 동기화에 별도로 동의하면 식품 정보와 사진을 계정에 저장하고 다른 로그인 기기와 동기화합니다. 로그인만으로 식품 동기화가 켜지지는 않습니다. Apple 로그인도 지원합니다.</p>
 </details>
