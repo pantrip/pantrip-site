@@ -18,6 +18,10 @@
   let attemptedAutoplay = false;
   let resumeAfterVisibility = false;
   let playRequest = 0;
+  let objectURL = null;
+  let disposed = false;
+  let pageHidden = false;
+  const fetchController = new AbortController();
 
   function updateControls() {
     toggle.disabled = !ready || unavailable;
@@ -39,18 +43,53 @@
     chapterButtons.forEach(button => button.setAttribute('aria-pressed', String(button === active)));
   }
 
+  function releaseDemo() {
+    fetchController.abort();
+    if (objectURL) {
+      const previousURL = objectURL;
+      objectURL = null;
+      video.removeAttribute('src');
+      video.load();
+      URL.revokeObjectURL(previousURL);
+    }
+  }
+
   function markUnavailable() {
+    if (disposed || unavailable) return;
     unavailable = true;
     ready = false;
     playRequest++;
     if (typeof video.pause === 'function') video.pause();
     video.hidden = true;
     poster.hidden = false;
+    releaseDemo();
     updateControls();
   }
 
+  async function loadDemo() {
+    try {
+      if (!video.dataset.src) throw new Error('Missing demo source');
+      const source = new URL(video.dataset.src, window.location.href);
+      if (source.origin !== window.location.origin || !['https:', 'http:'].includes(source.protocol)) throw new Error('Invalid demo origin');
+      const response = await fetch(source.href, {mode: 'same-origin', credentials: 'same-origin', signal: fetchController.signal});
+      if (disposed || unavailable) return;
+      if (!response.ok || ['opaque', 'opaqueredirect'].includes(response.type)) throw new Error('Demo request failed');
+      if (response.url && new URL(response.url).origin !== source.origin) throw new Error('Invalid demo response origin');
+      const type = (response.headers.get('content-type') || '').split(';')[0].trim().toLowerCase();
+      if (!['video/mp4', 'application/mp4', 'application/octet-stream'].includes(type)) throw new Error('Invalid demo type');
+      const blob = await response.blob();
+      if (disposed || unavailable) return;
+      if (!blob.size) throw new Error('Empty demo');
+      objectURL = URL.createObjectURL(blob.type === 'video/mp4' ? blob : new Blob([blob], {type: 'video/mp4'}));
+      video.src = objectURL;
+      video.load();
+    } catch {
+      markUnavailable();
+    }
+  }
+
   function playDemo() {
-    if (!ready || unavailable || document.hidden) return;
+    if (!ready || unavailable || disposed || pageHidden || document.hidden) return;
     const request = ++playRequest;
     const rejected = () => {
       if (request !== playRequest) return;
@@ -64,10 +103,18 @@
   }
 
   function autoplay() {
-    if (!attemptedAutoplay && ready && !unavailable && !motion.matches && !document.hidden) {
+    if (!attemptedAutoplay && ready && !unavailable && !disposed && !pageHidden && !motion.matches && !document.hidden) {
       attemptedAutoplay = true;
       playDemo();
     }
+  }
+
+  function resumePlayback() {
+    if (disposed || pageHidden || document.hidden) return;
+    if (resumeAfterVisibility && !motion.matches) {
+      resumeAfterVisibility = false;
+      playDemo();
+    } else autoplay();
   }
   function render() {
     document.documentElement.lang = lang;
@@ -90,10 +137,15 @@
   });
   if (poster.complete && !poster.naturalWidth) poster.setAttribute('src', poster.dataset.fallbackSrc);
   video.muted = true;
-  video.addEventListener('loadedmetadata', () => { ready = true; updateControls(); autoplay(); });
+  video.addEventListener('loadedmetadata', () => {
+    if (!objectURL || disposed || unavailable) return;
+    ready = true;
+    updateControls();
+    autoplay();
+  });
   video.addEventListener('error', markUnavailable);
   video.addEventListener('playing', () => {
-    if (unavailable || document.hidden) { video.pause(); return; }
+    if (unavailable || disposed || pageHidden || document.hidden) { video.pause(); return; }
     hasFrame = true;
     video.hidden = false;
     poster.hidden = true;
@@ -110,7 +162,7 @@
     else { playRequest++; video.pause(); }
   });
   chapterButtons.forEach(button => button.addEventListener('click', () => {
-    if (button.disabled || document.hidden) return;
+    if (button.disabled || disposed || pageHidden || document.hidden) return;
     attemptedAutoplay = true;
     resumeAfterVisibility = false;
     try { video.currentTime = Number(button.dataset.demoTime); }
@@ -120,14 +172,24 @@
   }));
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
-      resumeAfterVisibility = !video.paused;
+      resumeAfterVisibility = resumeAfterVisibility || !video.paused;
       playRequest++;
       video.pause();
-    } else if (resumeAfterVisibility && !motion.matches) {
-      resumeAfterVisibility = false;
-      playDemo();
-    } else autoplay();
+    } else resumePlayback();
   });
+  window.addEventListener('pagehide', event => {
+    pageHidden = true;
+    resumeAfterVisibility = resumeAfterVisibility || !video.paused;
+    playRequest++;
+    video.pause();
+    if (!event.persisted) {
+      disposed = true;
+      ready = false;
+      releaseDemo();
+      updateControls();
+    }
+  });
+  window.addEventListener('pageshow', () => { pageHidden = false; resumePlayback(); });
   motion.addEventListener('change', () => {
     if (motion.matches) {
       resumeAfterVisibility = false;
@@ -137,5 +199,5 @@
   });
   render();
   if (video.error || typeof video.play !== 'function') markUnavailable();
-  else if (video.readyState >= 1) { ready = true; updateControls(); autoplay(); }
+  else loadDemo();
 })();
