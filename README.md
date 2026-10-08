@@ -2,6 +2,16 @@
 
 공식 공개 사이트는 OpenAI / ChatGPT Sites의 `https://pantrip.app/`와 `https://www.pantrip.app/`입니다. `public/`의 소개 페이지·개인정보·이용약관·고객지원을 `node build-public.mjs`로 `out/`에 빌드합니다. 공개 Sites 설정은 `.openai/hosting.json`이며 `static.directory`는 `out`입니다. GitHub Pages는 `public/`을 배포하는 호환 미러이고, 공개 Sites 빌드는 관리자·API 문서를 제외합니다.
 
+## 앱 화면을 활용한 소개 페이지 (2026-10-08)
+
+소개 페이지는 식품 관리 → 사진 등록 → 3D 모양 → 주방 12종 → 위젯·기한 알림 → 지원 순서입니다. 크림색·짙은 회색과 주황 점으로 앱의 시각 스타일을 따르고, 현재 점 형태의 P 아이콘을 브라우저 탭과 홈 화면 아이콘에 사용합니다.
+
+한국어·영어 전환 시 문구, 접근성 레이블, 실제 앱 화면과 위젯 이미지가 함께 바뀝니다. 주방·상품 이미지는 앱에서 캡처한 정적 이미지이며 웹에서 3D를 실행하지 않습니다. 식품·위젯에 보이는 정보는 예시 데이터입니다. `public/assets/photo-original.jpg`와 `photo-cutout.webp`는 USDA ARS의 퍼블릭 도메인 [Fuji apple 사진](https://commons.wikimedia.org/wiki/File:Fuji_apple.jpg)을 활용하며 페이지에도 출처를 표시합니다.
+
+Google 로그인 데이터 사용 설명은 하단의 접을 수 있는 안내에 유지합니다. 언어 선택은 현재 페이지에서만 적용되며 새로 열면 한국어로 시작합니다. 분석·광고 스크립트나 앱 계정 API는 추가하지 않습니다. `check-public.mjs`는 이미지·앵커·아이콘·KO/EN 전환과 정책 링크를 검사하고 Pages CI에서도 실행합니다.
+
+GitHub main 병합은 Pages 미러의 자동 배포를 시작합니다. 공식 주소는 별도 Sites 소스에 동일 공개 빌드를 반영하고 버전을 게시해야 갱신됩니다. 두 배포의 완료 상태를 따로 확인합니다.
+
 ## 개인정보·이용약관·지원 페이지
 
 - 원문: `legal-content.json` — 한국어, 영어, 일본어, 태국어, 러시아어, 스페인어, 몽골어.
