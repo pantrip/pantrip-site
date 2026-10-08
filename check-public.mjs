@@ -27,7 +27,8 @@ assert(!html.includes('kitchen-preview.mp4') && !existsSync(resolve(root,'assets
 const videos=[...html.matchAll(/<video\b[^>]*>/g)];
 assert.equal(videos.length,1,'One shared app demo video');
 const videoTag=videos[0][0];
-assert(videoTag.includes('src="assets/pantrip-demo-en.mp4"') && videoTag.includes('poster="assets/pantrip-demo-en-poster.jpg"'),'Shared English video and poster');
+assert(videoTag.includes('data-src="assets/pantrip-demo-en.mp4"') && videoTag.includes('poster="assets/pantrip-demo-en-poster.jpg"'),'Shared English video and poster');
+assert(!/\ssrc=/.test(videoTag),'Native media loading cannot duplicate the Blob fetch');
 for(const attr of ['muted','loop','playsinline']) assert(new RegExp(`\\s${attr}(?:\\s|>)`).test(videoTag),`Demo ${attr}`);
 assert(videoTag.includes('preload="metadata"') && !/\sautoplay(?:\s|>)/.test(videoTag),'Autoplay starts only after checking motion and visibility');
 assert(!videoTag.includes('data-ko-src') && !videoTag.includes('data-en-src'),'Language changes do not reload the demo');
@@ -75,36 +76,67 @@ function parse(tag){
  const dataset={};for(const [k,v] of Object.entries(attrs)) if(k.startsWith('data-')) dataset[k.slice(5).replace(/-(\w)/g,(_,c)=>c.toUpperCase())]=v;
  return {attrs,dataset,handlers:{},textContent:'',hidden:/\shidden(?:\s|>)/.test(tag),disabled:/\sdisabled(?:\s|>)/.test(tag),
   addEventListener(type,fn){this.handlers[type]=fn;},emit(type){this.handlers[type]?.();},setAttribute(k,v){this.attrs[k]=v;},getAttribute(k){return this.attrs[k];},
-  toggleAttribute(k,force){if(force) this.attrs[k]='';else delete this.attrs[k];},hasAttribute(k){return k in this.attrs;}};
+  toggleAttribute(k,force){if(force) this.attrs[k]='';else delete this.attrs[k];},hasAttribute(k){return k in this.attrs;},removeAttribute(k){delete this.attrs[k];}};
 }
-function run(config={},options={}){
+const flush=()=>new Promise(resolve=>setImmediate(resolve));
+async function run(config={},options={}){
  const elements=[...html.matchAll(/<(?!\/)[^>]+>/g)].map(m=>parse(m[0]));
  const byId=id=>elements.find(el=>el.attrs.id===id);
  const video=byId('demo-video'),poster=byId('demo-poster');
- Object.assign(video,{paused:true,currentTime:0,duration:options.duration ?? 24.5,readyState:options.readyState ?? 0,playCalls:0,pauseCalls:0,error:options.videoError ?? null,
+ if(options.source!==undefined) video.dataset.src=options.source;
+ let currentTime=0;
+ Object.assign(video,{paused:true,duration:options.duration ?? 24.5,readyState:0,playCalls:0,pauseCalls:0,loadCalls:0,error:options.videoError ?? null,
   play(){this.playCalls++;if(options.throwPlay) throw new Error('Playback unavailable');if(options.rejectPlay) return Promise.reject(new Error('Autoplay rejected'));this.paused=false;this.emit('play');this.emit('playing');return Promise.resolve();},
-  pause(){this.pauseCalls++;this.paused=true;this.emit('pause');}});
+  pause(){this.pauseCalls++;this.paused=true;this.emit('pause');},
+  load(){this.loadCalls++;this.readyState=this.attrs.src ? options.readyState ?? 0 : 0;if(this.readyState>=1) this.emit('loadedmetadata');}});
+ Object.defineProperty(video,'src',{get(){return this.attrs.src;},set(value){this.attrs.src=value;}});
+ // Reproduce a browser that reports no usable seek range for a hosted URL; local Blob data is seekable.
+ Object.defineProperty(video,'currentTime',{get(){return currentTime;},set(value){currentTime=this.attrs.src?.startsWith('blob:') ? value : 0;}});
  if(options.unsupported) video.play=undefined;
  Object.assign(poster,{complete:!!options.posterFailed,naturalWidth:options.posterFailed ? 0 : 720});
  const motion={matches:!!options.reducedMotion,handlers:{},addEventListener(type,fn){this.handlers[type]=fn;}};
  const meta={content:''};
  const document={documentElement:{},hidden:!!options.hidden,handlers:{},addEventListener(type,fn){this.handlers[type]=fn;},getElementById:byId,querySelector:q=>{assert.equal(q,'meta[name="description"]');return meta;},
   querySelectorAll:q=>{const names=[...q.matchAll(/\[([\w-]+)\]/g)].map(m=>m[1]);return elements.filter(el=>names.every(n=>n in el.attrs));}};
- vm.runInNewContext(readFileSync(resolve(root,'app.js'),'utf8'),{document,window:{PANTRIP_SITE:config,matchMedia:q=>{assert.equal(q,'(prefers-reduced-motion: reduce)');return motion;}},URL});
- return {byId,document,meta,elements,video,poster,motion,buttons:elements.filter(el=>'data-demo-time' in el.attrs)};
+ const objectURLs={created:[],revoked:[]};
+ class DemoURL extends URL {
+  static createObjectURL(blob){const url=`blob:https://pantrip.app/demo-${objectURLs.created.length+1}`;objectURLs.created.push({url,blob});return url;}
+  static revokeObjectURL(url){objectURLs.revoked.push(url);}
+ }
+ const fetchCalls=[];
+ const blob=new Blob(options.emptyBlob ? [] : ['demo bytes'],{type:options.mimeType ?? 'video/mp4'});
+ const response={ok:!options.httpError,type:options.responseType ?? 'basic',status:options.status ?? 200,url:options.responseURL ?? 'https://pantrip.app/assets/pantrip-demo-en.mp4',
+  headers:{get(name){return name==='content-type' ? options.mimeType ?? 'video/mp4' : null;}},
+  blob(){return options.deferredBody ? new Promise(resolve=>{options.resolveBody=()=>resolve(blob);}) : Promise.resolve(blob);}};
+ const fetch=(url,request)=>{
+  fetchCalls.push({url,request});
+  if(options.fetchError) return Promise.reject(new Error('Network error'));
+  return options.deferredFetch ? new Promise(resolve=>{options.resolveFetch=()=>resolve(response);}) : Promise.resolve(response);
+ };
+ const window={PANTRIP_SITE:config,location:{href:'https://pantrip.app/',origin:'https://pantrip.app'},handlers:{},addEventListener(type,fn){this.handlers[type]=fn;},
+  matchMedia:q=>{assert.equal(q,'(prefers-reduced-motion: reduce)');return motion;}};
+ vm.runInNewContext(readFileSync(resolve(root,'app.js'),'utf8'),{document,window,URL:DemoURL,fetch,Blob,AbortController});
+ await flush();
+ return {byId,document,meta,elements,video,poster,motion,window,fetchCalls,objectURLs,buttons:elements.filter(el=>'data-demo-time' in el.attrs)};
 }
 const setup={window:{}};vm.runInNewContext(readFileSync(resolve(root,'config.js'),'utf8'),setup);
-const a=run(setup.window.PANTRIP_SITE),get=a.byId;
+const a=await run(setup.window.PANTRIP_SITE),get=a.byId;
 const localized=a.elements.filter(el=>'data-ko' in el.attrs&&'data-en' in el.attrs);
 assert(localized.length>30,'Localized headings, controls and notes found');
 assert.equal(a.document.documentElement.lang,'ko');
 assert(localized.every(el=>el.textContent===el.dataset.ko&&el.dataset.ko&&el.dataset.en),'Korean copy by default');
-assert.equal(a.video.attrs.src,'assets/pantrip-demo-en.mp4');
+assert.equal(a.video.dataset.src,'assets/pantrip-demo-en.mp4');
+assert.equal(a.fetchCalls.length,1,'MP4 is fetched once');
+assert.equal(a.fetchCalls[0].url,'https://pantrip.app/assets/pantrip-demo-en.mp4');
+assert.equal(a.fetchCalls[0].request.mode,'same-origin');
+assert.equal(a.fetchCalls[0].request.credentials,'same-origin');
+assert.equal(a.video.src,a.objectURLs.created[0].url,'Media source uses the downloaded Blob');
 assert.equal(a.poster.attrs.src,'assets/pantrip-demo-en-poster.jpg');
 get('language').handlers.click();
 assert.equal(a.document.documentElement.lang,'en');
 assert(localized.every(el=>el.textContent===el.dataset.en),'Every localized text swaps to English');
-assert.equal(a.video.attrs.src,'assets/pantrip-demo-en.mp4','Demo stays in English after language change');
+assert.equal(a.video.src,a.objectURLs.created[0].url,'Language change retains the same Blob source');
+assert.equal(a.fetchCalls.length,1,'Language change does not download the demo again');
 assert.equal(a.poster.attrs.src,'assets/pantrip-demo-en-poster.jpg','Poster does not swap');
 for(const [id,en] of [['photo-title','Snap a photo. Add your food.'],['shapes-title','Your food, now in 3D'],['kitchens-title','A kitchen that’s all yours'],['reminders-title','Keep track of use-by dates']])
  assert.equal(get(id).textContent,en,`Heading ${id} in English`);
@@ -118,7 +150,7 @@ get('language').handlers.click();
 assert(localized.every(el=>el.textContent===el.dataset.ko),'Back to Korean');
 assert.equal(get('language').attrs['aria-label'],'Switch to English');
 assert.equal(get('privacy-link').attrs.href,'privacy.html');
-const b=run({privacyURL:'https://example.com/privacy'});
+const b=await run({privacyURL:'https://example.com/privacy'});
 assert.equal(b.byId('privacy-link').href,'https://example.com/privacy');
 
 // Media behavior uses controlled mocks; this is not browser autoplay or visual verification.
@@ -160,7 +192,7 @@ a.document.hidden=true;a.document.handlers.visibilitychange();
 a.document.hidden=false;a.document.handlers.visibilitychange();
 assert(a.video.paused && a.video.playCalls===beforeResume+1,'Returning preserves a manual pause');
 
-const reduced=run({}, {reducedMotion:true});
+const reduced=await run({}, {reducedMotion:true});
 reduced.video.emit('loadedmetadata');
 assert.equal(reduced.video.playCalls,0,'Reduced motion starts on the poster');
 assert(!reduced.poster.hidden && !reduced.byId('demo-toggle').disabled,'Reduced motion still permits explicit playback');
@@ -173,13 +205,13 @@ reduced.document.hidden=true;reduced.document.handlers.visibilitychange();
 reduced.document.hidden=false;reduced.document.handlers.visibilitychange();
 assert.equal(reduced.video.playCalls,1,'Reduced motion prevents automatic resumption');
 
-const hidden=run({}, {hidden:true});
+const hidden=await run({}, {hidden:true});
 hidden.video.emit('loadedmetadata');
 assert.equal(hidden.video.playCalls,0,'A page opened in the background does not autoplay');
 hidden.document.hidden=false;hidden.document.handlers.visibilitychange();
 assert.equal(hidden.video.playCalls,1,'First visibility can start the demo');
 
-const rejectedOptions={rejectPlay:true},rejected=run({},rejectedOptions);
+const rejectedOptions={rejectPlay:true},rejected=await run({},rejectedOptions);
 rejected.video.emit('loadedmetadata');
 await new Promise(resolve=>setImmediate(resolve));
 assert(rejected.video.paused && !rejected.poster.hidden,'Autoplay rejection keeps a poster');
@@ -187,7 +219,7 @@ assert(!rejected.byId('demo-toggle').disabled,'Autoplay rejection retains manual
 rejectedOptions.rejectPlay=false;rejected.byId('demo-toggle').emit('click');
 assert(!rejected.video.paused && rejected.poster.hidden,'Manual play works after autoplay rejection');
 
-const failed=run();failed.video.emit('loadedmetadata');
+const failed=await run();failed.video.emit('loadedmetadata');
 failed.video.error={code:4};failed.video.emit('error');
 assert(failed.video.paused && failed.video.hidden && !failed.poster.hidden,'Video errors restore the poster');
 assert(failed.byId('demo-toggle').disabled && failed.byId('demo-chapters').hidden,'Video errors disable unusable controls');
@@ -201,21 +233,86 @@ assert.equal(failed.poster.attrs.src,'assets/hero-en.webp','Missing poster falls
 failed.poster.emit('error');
 assert.equal(failed.poster.attrs.src,'assets/hero-en.webp','Fallback failure does not loop');
 
-const unsupported=run({}, {unsupported:true});
+const unsupported=await run({}, {unsupported:true});
 assert(unsupported.byId('demo-toggle').disabled && unsupported.byId('demo-chapters').hidden && !unsupported.poster.hidden,'No media support retains fallback with inert controls');
-const earlyError=run({}, {videoError:{code:4}});
+const earlyError=await run({}, {videoError:{code:4}});
 assert(earlyError.video.hidden && earlyError.byId('demo-toggle').disabled && !earlyError.poster.hidden,'A video error before initialization still restores the poster');
-const cached=run({}, {readyState:1,posterFailed:true});
+const cached=await run({}, {readyState:1,posterFailed:true});
 assert.equal(cached.video.playCalls,1,'Metadata loaded before initialization also starts playback');
 assert.equal(cached.poster.attrs.src,'assets/hero-en.webp','A poster error before initialization still falls back');
-const thrown=run({}, {throwPlay:true});thrown.video.emit('loadedmetadata');
+const thrown=await run({}, {throwPlay:true});thrown.video.emit('loadedmetadata');
 assert(!thrown.poster.hidden && !thrown.byId('demo-toggle').disabled,'Synchronous play rejection also keeps manual controls');
-const short=run({}, {duration:8});short.video.emit('loadedmetadata');
+const short=await run({}, {duration:8});short.video.emit('loadedmetadata');
 assert(short.buttons.slice(2).every(button=>button.disabled),'Chapters beyond the available duration are disabled');
 short.buttons[2].emit('click');
 assert.equal(short.video.currentTime,0,'Disabled chapters cannot seek');
 
+// These mocks cover host-independent seeking and Blob ownership, not actual browser/provider behavior.
+assert.equal(unsupported.fetchCalls.length,0,'Unsupported media does not download the demo');
+assert.equal(earlyError.fetchCalls.length,0,'An existing media error does not download the demo');
+assert.deepEqual(failed.objectURLs.revoked,[failed.objectURLs.created[0].url],'A decode error releases its Blob URL');
+for(const [name,options] of [
+ ['network failure',{fetchError:true}],['HTTP failure',{httpError:true}],['opaque response',{responseType:'opaque'}],
+ ['HTML response',{mimeType:'text/html'}],['empty body',{emptyBlob:true}],
+ ['cross-origin source',{source:'https://example.com/demo.mp4'}],['non-HTTP source',{source:'data:video/mp4,bytes'}],
+ ['cross-origin response',{responseURL:'https://example.com/demo.mp4'}]
+]){
+ const unavailable=await run({},options);
+ assert(unavailable.byId('demo-toggle').disabled && unavailable.byId('demo-chapters').hidden && !unavailable.poster.hidden,`${name} keeps poster and inert controls`);
+ assert.equal(unavailable.objectURLs.created.length,0,`${name} does not allocate a Blob URL`);
+ if(options.source) assert.equal(unavailable.fetchCalls.length,0,`${name} is rejected before fetching`);
+}
+const generic=await run({}, {mimeType:'application/octet-stream',status:206});
+assert.equal(generic.objectURLs.created[0].blob.type,'video/mp4','Generic MP4 responses use a video MIME type for playback');
+generic.video.emit('loadedmetadata');generic.buttons[3].emit('click');
+assert.equal(generic.video.currentTime,16.5,'Local Blob seeking does not depend on the hosted response seek range');
+
+const restored=await run();restored.video.emit('loadedmetadata');
+const restoredURL=restored.video.src;
+restored.document.hidden=true;restored.document.handlers.visibilitychange();
+restored.window.handlers.pagehide({persisted:true});
+assert(restored.video.paused && restored.video.src===restoredURL,'Back/forward cache pauses and retains the media source');
+assert.equal(restored.objectURLs.revoked.length,0,'Back/forward cache does not revoke its retained Blob URL');
+assert(!restored.fetchCalls[0].request.signal.aborted,'Back/forward cache does not abort its fetch');
+restored.window.handlers.pageshow({persisted:true});
+assert.equal(restored.video.playCalls,1,'Restoration stays paused while the document is hidden');
+restored.document.hidden=false;restored.document.handlers.visibilitychange();
+assert.equal(restored.video.playCalls,2,'Restoration resumes previously playing media after visibility returns');
+assert.equal(restored.fetchCalls.length,1,'Restoration reuses the downloaded data');
+restored.byId('demo-toggle').emit('click');
+restored.window.handlers.pagehide({persisted:true});restored.window.handlers.pageshow({persisted:true});
+assert(restored.video.paused && restored.video.playCalls===2,'Restoration preserves a manual pause');
+restored.window.handlers.pagehide({persisted:false});
+assert.deepEqual(restored.objectURLs.revoked,[restoredURL],'Leaving without back/forward cache revokes the Blob URL once');
+assert(!restored.video.hasAttribute('src') && restored.fetchCalls[0].request.signal.aborted,'Final cleanup detaches media and aborts the request');
+restored.window.handlers.pagehide({persisted:false});
+assert.equal(restored.objectURLs.revoked.length,1,'Repeated cleanup does not revoke twice');
+
+const pendingOptions={deferredFetch:true},pending=await run({},pendingOptions);
+pending.video.emit('loadedmetadata');
+assert(pending.byId('demo-toggle').disabled && pending.byId('demo-chapters').hidden,'Controls stay unavailable before downloaded media metadata');
+pending.document.hidden=true;pending.document.handlers.visibilitychange();
+pending.window.handlers.pagehide({persisted:true});
+pendingOptions.resolveFetch();await flush();
+pending.video.emit('loadedmetadata');
+assert.equal(pending.objectURLs.created.length,1,'A request finishing in back/forward cache retains its Blob data');
+assert.equal(pending.video.playCalls,0,'A response arriving in the background only prepares media');
+assert(!pending.byId('demo-toggle').disabled,'Downloaded metadata can become ready while paused');
+pending.window.handlers.pageshow({persisted:true});
+pending.document.hidden=false;pending.document.handlers.visibilitychange();
+assert.equal(pending.video.playCalls,1,'Visible restoration starts the prepared demo');
+
+for(const deferred of ['deferredFetch','deferredBody']){
+ const options={[deferred]:true},leaving=await run({},options);
+ leaving.window.handlers.pagehide({persisted:false});
+ assert(leaving.fetchCalls[0].request.signal.aborted,'Leaving aborts an unfinished download');
+ options[deferred==='deferredFetch' ? 'resolveFetch' : 'resolveBody']();await flush();
+ assert.equal(leaving.objectURLs.created.length,0,'A request or body finishing after disposal cannot leak a Blob URL');
+ assert.equal(leaving.video.playCalls,0,'Disposed media cannot start playing');
+}
+
 console.log('PASS: mocked media autoplay/rejection, chapters, play/pause, visibility, reduced motion, load errors and poster fallback');
+console.log('PASS: single same-origin Blob fetch, response failures, host-independent seeking, cleanup and back/forward cache');
 console.log('PASS: KO/EN headings/labels/widgets, shared English demo, 12 kitchens, disclosures, attribution and policy links');
 for(const url of assetURLs) assert(existsSync(resolve(root,url)),`Missing asset ${url}`);
 const mp4=readFileSync(resolve(root,'assets/pantrip-demo-en.mp4'));
