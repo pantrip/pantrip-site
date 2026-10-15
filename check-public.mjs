@@ -17,6 +17,7 @@ assert(html.includes(':root{padding:env(safe-area-inset-top,0px) 0 env(safe-area
 assert(/<style>\n@import url\('https:\/\/fonts\.googleapis\.com\//.test(html),'Font @import is the first rule');
 assert(html.includes('<title>Pantrip: Food &amp; Kitchen</title>'));
 assert(html.includes('<meta name="google-site-verification" content="oeRmYQ1gHrO_SfnqCqhU_MF8tc5xIbpoDs0QWFrdCNo" />'));
+assert(html.includes('<meta name="google-site-verification" content="KOtHUTwfbFngak_SS_WLJ_Ia73iYwt3fUL_JBUzZ5yQ" />'),'Company Search Console verification is separate from the existing owner tag');
 assert(html.includes('<link rel="canonical" href="https://pantrip.app/">'));
 assert(html.includes('<meta name="referrer" content="no-referrer">'));
 assert(!/document\.title\s*=/.test(html),'The page keeps its static title');
