@@ -17,9 +17,31 @@ assert(html.includes(':root{padding:env(safe-area-inset-top,0px) 0 env(safe-area
 assert(/<style>\n@import url\('https:\/\/fonts\.googleapis\.com\//.test(html),'Font @import is the first rule');
 assert(html.includes('<title>Pantrip: Food &amp; Kitchen</title>'));
 assert(html.includes('<meta name="google-site-verification" content="oeRmYQ1gHrO_SfnqCqhU_MF8tc5xIbpoDs0QWFrdCNo" />'));
+assert(html.includes('<meta name="google-site-verification" content="KOtHUTwfbFngak_SS_WLJ_Ia73iYwt3fUL_JBUzZ5yQ" />'),'Company Search Console verification is separate from the existing owner tag');
 assert(html.includes('<link rel="canonical" href="https://pantrip.app/">'));
 assert(html.includes('<meta name="referrer" content="no-referrer">'));
 assert(!/document\.title\s*=/.test(html),'The page keeps its static title');
+assert(html.includes('<meta property="og:url" content="https://pantrip.app/">'));
+assert(!/noindex/i.test(html),'The public homepage can be indexed');
+const schema=JSON.parse(html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)[1]);
+assert.equal(schema['@context'],'https://schema.org');
+assert.deepEqual(schema['@graph'].map(node=>node['@type']),['WebSite','SoftwareApplication']);
+assert.equal(schema['@graph'][1].operatingSystem,'iOS');
+assert(!('offers' in schema['@graph'][1])&&!('aggregateRating' in schema['@graph'][1]),'Do not invent prices or ratings');
+const robots=readFileSync(file('robots.txt'),'utf8');
+assert(robots.includes('User-agent: *\nAllow: /')&&robots.includes('Disallow: /admin')&&robots.includes('Disallow: /api'));
+assert(robots.includes('Sitemap: https://pantrip.app/sitemap.xml'));
+const sitemap=readFileSync(file('sitemap.xml'),'utf8');
+const urls=[...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match=>match[1]);
+assert.equal(urls.length,25,'Homepage and 24 policy/support pages');
+assert.equal(new Set(urls).size,25,'No duplicate URLs');
+for(const url of urls){
+ const path=new URL(url).pathname;
+ assert.equal(new URL(url).origin,'https://pantrip.app');
+ assert(!/admin|api|\.html/.test(path),'Only clean public production URLs');
+ const page=readFileSync(file(path==='/'?'index.html':path.slice(1)+'.html'),'utf8');
+ assert(page.includes(`<link rel="canonical" href="${url}">`),`Sitemap and canonical agree: ${url}`);
+}
 // Favicons: dot-matrix app icon at the declared sizes (PNG IHDR width/height).
 for(const [rel,size,name] of [['icon',32,'favicon-32.png'],['icon',16,'favicon-16.png'],['apple-touch-icon',180,'apple-touch-icon.png'],[null,512,'app-icon.png']]) {
  if(rel) assert(html.includes(`<link rel="${rel}" `) && html.includes(`sizes="${size}x${size}" href="assets/${name}"`),`Favicon link ${name}`);
@@ -31,7 +53,7 @@ for(const [rel,size,name] of [['icon',32,'favicon-32.png'],['icon',16,'favicon-1
 assert(!html.includes('apps.apple.com'),'No fake download URL');
 assert(!/\/admin|swagger/i.test(html),'No admin or API documentation links');
 assert(!/googletagmanager|gtag\(|google-analytics|adsbygoogle|amplitude|plausible|clarity\.ms|facebook\.net/i.test(html),'No analytics or ad scripts');
-const allowed=['cdn.jsdelivr.net','fonts.googleapis.com','commons.wikimedia.org','creativecommons.org','poly.pizza'];
+const allowed=['cdn.jsdelivr.net','fonts.googleapis.com','commons.wikimedia.org','creativecommons.org','poly.pizza','schema.org'];
 for(const [,h] of html.matchAll(/https:\/\/([a-z0-9.-]+)\//g)) assert(allowed.includes(h)||/(^|\.)pantrip\.app$/.test(h),`Unexpected host ${h}`);
 for(const [,src] of html.matchAll(/<script[^>]*\ssrc="([^"]+)"/g)) assert.fail(`No script files besides the import map: ${src}`);
 const importMap=JSON.parse(html.match(/<script type="importmap">([^<]+)<\/script>/)[1]);

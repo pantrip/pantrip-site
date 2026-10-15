@@ -8,6 +8,11 @@ assert.equal(await readFile('public/legal.css','utf8'),await readFile('legal.css
 for(const file of ['public/index.html','public/privacy.html','public/support.html','public/terms.html']){
  const html=await readFile(file,'utf8');assert(html.includes('Pantrip') && !html.includes('ExpiryCheck'));
 }
+for(const kind of ['privacy','support','terms']){
+ const html=await readFile(`public/${kind}.html`,'utf8');
+ for(const lang of langs)assert(html.includes(`<link rel="alternate" hreflang="${lang}" href="https://pantrip.app/${kind}/${lang}">`));
+ assert(html.includes(`<link rel="alternate" hreflang="x-default" href="https://pantrip.app/${kind}">`));
+}
 let checked=0;
 for(const lang of langs){
  assert.equal(data[lang].sections.length,10);
@@ -28,6 +33,9 @@ for(const lang of langs){
   const file=resolve('public',kind,lang+'.html');
   const html=await readFile(file,'utf8');
   assert(html.includes(`<html lang="${lang}">`));
+  assert(html.includes(`<link rel="canonical" href="https://pantrip.app/${kind}/${lang}">`));
+  for(const code of langs)assert(html.includes(`<link rel="alternate" hreflang="${code}" href="https://pantrip.app/${kind}/${code}">`));
+  assert(html.includes(`<link rel="alternate" hreflang="x-default" href="https://pantrip.app/${kind}">`));
   assert(html.includes('jsh097610@gmail.com'));
   assert(html.includes('Pantrip') && !html.includes('ExpiryCheck'));
   assert(!/<script|__\w+__|YOUR_|localhost|127\.0\.0\.1/i.test(html));
