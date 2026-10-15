@@ -2,17 +2,18 @@
 
 공식 공개 사이트는 OpenAI / ChatGPT Sites의 `https://pantrip.app/`와 `https://www.pantrip.app/`입니다. `public/`의 소개 페이지·개인정보·이용약관·고객지원을 `node build-public.mjs`로 `out/`에 빌드합니다. 공개 Sites 설정은 `.openai/hosting.json`이며 `static.directory`는 `out`입니다. GitHub Pages는 `public/`을 배포하는 호환 미러이고, 공개 Sites 빌드는 관리자·API 문서를 제외합니다.
 
-## 앱 화면을 활용한 소개 페이지 (2026-10-08)
+## 냉장고 이야기 소개 페이지 (2026-10-15)
 
-소개 페이지는 식품 관리 → 사진 등록 → 3D 모양 → 주방 12종 → 위젯·기한 알림 → 지원 순서입니다. 크림색·짙은 회색과 주황 점으로 앱의 시각 스타일을 따르고, 현재 점 형태의 P 아이콘을 브라우저 탭과 홈 화면 아이콘에 사용합니다.
+`public/index.html` 한 파일이 소개 페이지 전체입니다(별도 `app.js`·`style.css`·`config.js` 없음). 순서: 원룸 주방(theme:studio) 밤 장면 속 열린 냉장고와 잊혀 가는 음식 → 사진 한 장 등록 → 내 냉장고와 Pantrip 한옥 주방 나란히(D-day 태그) → 출발 안내판(주방 12개, 실제 입장 영상) → 상품·장식 놀링 테이블 → `alley-collection` 패키지 탑승권 → 정책·지원 링크, 운영자·연락처, Google 로그인 설명, 출처. 가격·포인트는 표시하지 않습니다.
 
-상단 iPhone 안내·반복 설명·사진과 위젯 캡션 등 보조 문구를 제거하고 제목과 장면 선택 버튼을 중심으로 정리했습니다. 출처·예시 데이터·포인트 주방 안내는 하단의 `이미지·데모 안내`에 유지합니다.
-
-24.5초 무음 영문 영상은 실제 앱의 주방 동작·사진 등록 녹화와 실제 상품·주방·위젯 렌더 이미지의 편집 장면을 연결합니다. 영상은 공통 영어이고, 한국어·영어 전환 시 페이지 문구·접근성 레이블·영상 밖 위젯 이미지가 바뀝니다. 웹에서 SceneKit이나 앱 계정 데이터를 실행하지 않습니다. 출처·구간·생성 방법은 [영상 자산 기록](docs/demo-assets.md)을 참조하세요. 식품·위젯 정보는 예시 데이터입니다. `public/assets/photo-original.jpg`와 `photo-cutout.webp`는 USDA ARS의 퍼블릭 도메인 [Fuji apple 사진](https://commons.wikimedia.org/wiki/File:Fuji_apple.jpg)을 활용하며 하단에 출처를 표시합니다.
-
-영상은 같은 출처에서 한 번 내려받아 Blob URL로 재생하고, 메타데이터 로드 후 재생·장면 선택을 활성화합니다. 정적 호스트의 응답에서 브라우저가 탐색 범위를 0초로 인식해도 장면 선택이 동작하도록 한 방식입니다. 다운로드·미디어 오류는 포스터로 처리하고 자동재생 거절 시 수동 재생을 유지합니다. 동작 줄이기 설정에서는 자동재생하지 않으며 탭이 숨겨지면 일시 정지합니다. `check-public.mjs`는 이 상태 전환, 다운로드 경계, SVG 아이콘의 실제 hidden 속성도 검사합니다.
-
-Google 로그인 데이터 사용 설명은 하단의 접을 수 있는 안내에 유지합니다. 언어 선택은 현재 페이지에서만 적용되며 새로 열면 한국어로 시작합니다. 분석·광고 스크립트나 앱 계정 API는 추가하지 않습니다. `check-public.mjs`는 이미지·앵커·아이콘·KO/EN 전환과 정책 링크를 검사하고 Pages CI에서도 실행합니다.
+- 3D: three.js 0.160.0을 import map으로 `cdn.jsdelivr.net/npm/three@0.160.0`에서 불러오고, 글꼴은 Google Fonts입니다. 앱의 실제 상품 GLB(`assets/products/`)와 한옥·원룸 주방 GLB(`assets/kitchen-hanok.glb`, `assets/kitchen-studio.glb`)는 quantize·WebP만 쓰므로 별도 디코더가 필요 없습니다. 호스트가 `.glb`를 그대로 제공해야 합니다.
+- WebGL이 없거나 동작 줄이기 설정이면 `assets/stills/`의 정지 장면과 HTML 라벨을 보여 주고 입장 영상을 자동 재생하지 않습니다. 정지 장면은 캡처용 파라미터(`?still=s1&p=0.72&camp=0.12`, `?still=s2&p=0.93`, `?still=s3&p=0.33`)로 1440×900과 390×844@2x를 렌더링해 만들었습니다.
+- 언어: 10개(ko, en, ja, es, de, fr, th, ru, mn, vi). 브라우저 언어로 시작하고 오른쪽 위 선택은 이 기기에 저장합니다. 주방 이름·D-day 표기·등급명은 앱의 Localizable.xcstrings 용어를 씁니다. 카탈로그 항목 이름은 7개 언어이며 de/fr/vi는 영어로 표시합니다.
+- 카탈로그 스냅숏: `assets/catalog/snapshot.json`(rev 709, 2026-10-14, 공개 카탈로그 schema 1). 갱신할 때는 카탈로그를 다시 받아 같은 필드만 추출합니다. 출시·판매 중인 항목과 무료 기본 상품만 쓰고, 미리보기 PNG는 투명 WebP(120KB 이하), 입장 영상은 가로 540px·무음·8초 이하·1.2MB 이하로 다시 인코딩합니다. 서드파티 CC BY 모델이 든 신발 모음과 주방 팩(온천·사바나·사막·보카주)은 제외합니다. 스냅숏의 rev와 날짜는 하단 문구에 그대로 표시됩니다.
+- 출처: 원룸 창밖 야경 “Seoul-night-pano-cropped.jpg” by KLuwak(CC BY-SA 3.0), 사과 사진 USDA ARS(퍼블릭 도메인), 우주선 주방 일부 모델 “Rigged Astronaut” by J-Toastie(CC BY 3.0), 글꼴(SIL OFL), three.js(MIT). 하단 `출처`에 링크와 함께 표시합니다.
+- 유지 항목: 제목, google-site-verification, canonical, referrer no-referrer, 파비콘, 정책·지원 링크, 운영자·연락처, 접힌 Google 로그인 설명(ko/en은 기존 문구 그대로, 나머지는 같은 사실의 번역), 기한 알림 안내. 분석·광고 스크립트와 App Store 링크는 없습니다. CSP 메타는 이전에도 없었고 추가하지 않았습니다.
+- `check-public.mjs`는 문서 골격과 유지 항목, 10개 언어 카탈로그 키, 이미지 크기·alt, 동작 줄이기 처리, 참조 자산의 존재와 형식(glTF·MP4·WebP), 스냅숏 rev를 검사합니다.
+- 용량: `public/assets` 약 14MB(GLB 약 6.5MB, 입장 영상 약 6.9MB).
 
 GitHub main 병합은 Pages 미러의 자동 배포를 시작합니다. 공식 주소는 별도 Sites 소스에 동일 공개 빌드를 반영하고 버전을 게시해야 갱신됩니다. 두 배포의 완료 상태를 따로 확인합니다.
 

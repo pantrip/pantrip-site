@@ -1,8 +1,9 @@
 <!doctype html>
 <html lang="ko">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#F8F2E6" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#2B2621" media="(prefers-color-scheme: dark)">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#131412">
 <meta name="description" content="우리 집 식품을 한눈에. 사진으로 등록하고, 나만의 주방에서 소비기한을 챙기세요. Pantrip iPhone 앱.">
 <title>Pantrip: Food &amp; Kitchen</title>
 <meta name="google-site-verification" content="oeRmYQ1gHrO_SfnqCqhU_MF8tc5xIbpoDs0QWFrdCNo" />
@@ -11,134 +12,1111 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-<link rel="stylesheet" href="style.css">
-<script src="config.js" defer></script><script src="app.js" defer></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Gloock&family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&display=swap');
+/* host reset kept from the artifact build: safe areas, margins, images, [hidden] */
+:root{padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}
+/* One deliberate dark look (the brand's night palette); every colour is explicit. */
+:root{
+  --bg:#131412; --bg-2:#1c1e1a; --ink:#f4f2e9; --muted:#b3b7ab; --line:#34372f;
+  --lime:#cddd95; --amber:#f2a33a; --coral:#ec6c4f; --cream:#fbf5e8; --tag-ink:#1a1c17;
+  --flash:#ffffff; --shade:rgba(10,11,9,.62);
+  --board:#0b0c0a; --table:#a9b48e; --table-ink:#1f2419; --paper:#f2ede1; --paper-ink:#20231c; --paper-line:#cfc6b2;
+  --serif:"Gowun Batang","Apple SD Gothic Neo","Noto Serif KR",serif;
+  --sans:"Gowun Dodum","Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif;
+  --num:"Gloock",Georgia,serif; --tagf:var(--num);
+  --gut:clamp(16px,5vw,72px);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--lime);outline-offset:4px;border-radius:6px}
+#gl{position:fixed;left:0;top:0;width:100%;height:100vh;height:100lvh;display:block;z-index:0;pointer-events:none}
+main{position:relative;z-index:1;overflow-x:clip}
+.scrolly{position:relative}
+#s1{height:330vh}#s2{height:230vh}#s3{height:420vh}
+.stage{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden}
+.still{position:absolute;inset:0;margin:0;transition:opacity .9s ease;background:var(--bg)}
+.still img{width:100%;height:100%;object-fit:cover;display:block}
+.stage[data-ready] .still{opacity:0;visibility:hidden;transition:opacity .9s ease,visibility 0s .9s}
+html.live #s1 .still,html.live #s2 .still{display:none}
+html.static #gl{display:none}
+html.static .scrolly,html.static #s1,html.static #s2,html.static #s3{height:auto}
+html.static .stage{position:relative}
+html.static .stage .still{opacity:1;visibility:visible}
+html.static .anim-only{display:none!important}
+html.capture .line,html.capture .brand{visibility:hidden}
+/* per-script faces (loaded on demand); Korean and Latin/Vietnamese keep Gowun, which carries latin-ext + vietnamese */
+html[lang="ja"]{--serif:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif;--sans:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",system-ui,sans-serif;--tagf:var(--sans)}
+html[lang="th"]{--serif:"Noto Serif Thai","Thonburi",serif;--sans:"Noto Sans Thai","Thonburi",system-ui,sans-serif;--tagf:var(--sans)}
+html[lang="ru"],html[lang="mn"]{--serif:"Lora",Georgia,"Times New Roman",serif;--sans:"PT Sans","Helvetica Neue",Arial,sans-serif;--tagf:var(--sans)}
+html[lang="es"]{--tagf:var(--sans)}
+html:not([lang="ko"]) .line{word-break:normal;overflow-wrap:break-word;hyphens:auto}
+html[lang="ja"] .line,html[lang="th"] .line{line-break:strict;word-break:auto-phrase}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.lang-pick{position:fixed;z-index:20;top:calc(env(safe-area-inset-top,0px) + 16px);right:var(--gut);display:block}
+.lang-pick::after{content:"";position:absolute;right:12px;top:50%;width:6px;height:6px;margin-top:-5px;border:solid var(--muted);border-width:0 1.5px 1.5px 0;transform:rotate(45deg);pointer-events:none}
+#lang-select{appearance:none;-webkit-appearance:none;margin:0;padding:7px 30px 7px 12px;border:1px solid var(--line);border-radius:999px;background:rgba(19,20,18,.72);color:var(--ink);font:13px/1.2 system-ui,-apple-system,"Segoe UI",sans-serif;cursor:pointer}
+#lang-select:hover{border-color:var(--muted)}
+#lang-select option{background:var(--bg-2);color:var(--ink)}
+.static-only{display:none}
+html.static .static-only{display:block}
+.marks{position:absolute;inset:0;z-index:2;pointer-events:none}
+html.capture .stamp,html.capture .tag,html.capture .cap,html.capture .lang-pick{visibility:hidden!important}
+
+html.capture .still{display:none}
+html.capture .scrolly:not(.cap-on),html.capture .dep,html.capture .knoll,html.capture .passwrap,html.capture .foot{display:none}
+html.capture .scrolly{height:100vh}
+
+.brand{position:absolute;z-index:3;left:var(--gut);top:calc(env(safe-area-inset-top,0px) + 18px);display:flex;align-items:center;gap:10px;text-decoration:none;font-family:var(--num);font-size:21px;letter-spacing:.01em;color:var(--ink)}
+.brand img{width:30px;height:30px;border-radius:8px;display:block}
+.line{position:absolute;z-index:3;left:var(--gut);margin:0;font-family:var(--serif);font-weight:400;line-height:1.2;letter-spacing:-.02em;word-break:keep-all;text-wrap:balance;color:var(--ink);text-shadow:0 1px 2px var(--shade),0 2px 26px var(--shade)}
+.l1{bottom:clamp(36px,11vh,120px);font-size:clamp(34px,5.2vw,78px);max-width:calc(100% - 2*var(--gut))}
+@media (min-width:761px){.l1{max-width:min(13em,30vw);top:clamp(96px,15vh,160px);bottom:auto}html:not([lang="ko"]):not([lang="ja"]) .l1{font-size:clamp(32px,3.7vw,56px)}.stage .l2{top:auto;bottom:clamp(30px,6.5vh,64px)}}
+.l2{top:clamp(72px,13vh,128px);font-size:clamp(28px,3.4vw,50px);max-width:calc(100% - 2*var(--gut))}
+.l3{top:clamp(64px,10vh,104px);font-size:clamp(26px,3.1vw,46px);max-width:calc(100% - 2*var(--gut))}
+.stamp{position:absolute;z-index:3;right:var(--gut);top:calc(env(safe-area-inset-top,0px) + 66px);display:flex;align-items:center;gap:10px;font-family:var(--num);font-size:clamp(20px,1.9vw,27px);letter-spacing:.05em;color:var(--muted)}
+.stamp::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--muted);opacity:.7}
+
+/* viewfinder (registration) */
+.vf{position:absolute;z-index:2;left:0;top:0;width:0;height:0;pointer-events:none}
+.vf i{position:absolute;width:30px;height:30px;border:0 solid var(--cream)}
+.vf i:nth-child(1){left:-12px;top:-12px;border-width:2px 0 0 2px}
+.vf i:nth-child(2){right:-12px;top:-12px;border-width:2px 2px 0 0}
+.vf i:nth-child(3){left:-12px;bottom:-12px;border-width:0 0 2px 2px}
+.vf i:nth-child(4){right:-12px;bottom:-12px;border-width:0 2px 2px 0}
+.vf-focus{position:absolute;left:50%;top:50%;width:84px;height:84px;margin:-42px 0 0 -42px;border:1.5px solid var(--cream);border-radius:4px;opacity:.9}
+.vf-focus.lock{border-color:var(--lime)}
+.shutter{position:absolute;z-index:2;left:50%;bottom:clamp(24px,6vh,56px);width:70px;height:70px;margin-left:-35px;border-radius:50%;border:3px solid var(--cream);pointer-events:none}
+.shutter::after{content:"";position:absolute;inset:6px;border-radius:50%;background:var(--cream)}
+.flash{position:absolute;inset:0;z-index:4;background:var(--flash);opacity:0;pointer-events:none}
+
+/* D-day tags */
+.tags{position:absolute;inset:0;z-index:2;pointer-events:none}
+.tag{position:absolute;left:0;top:0;display:flex;align-items:center;gap:4px;padding:6px 11px 7px;border-radius:999px;font-family:var(--tagf);font-size:15px;line-height:1;color:var(--tag-ink);background:var(--lime);box-shadow:0 6px 18px rgba(8,9,7,.28);white-space:nowrap;visibility:hidden;will-change:transform}
+.tag::after{content:"";position:absolute;left:50%;bottom:-4px;width:9px;height:9px;margin-left:-4.5px;background:inherit;transform:rotate(45deg);border-radius:1px}
+.tag[data-s="soon"]{background:var(--amber)}
+.tag[data-s="urgent"]{background:var(--coral);color:#fff8f3}
+.tag[data-s="done"]{background:var(--cream)}
+.tag svg{width:15px;height:15px;display:block}
+.tag.pulse{animation:pulse 1.1s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(236,108,79,.55),0 6px 18px rgba(8,9,7,.28)}60%{box-shadow:0 0 0 10px rgba(236,108,79,0),0 6px 18px rgba(8,9,7,.28)}}
+
+/* mirror panes */
+.pane{position:absolute;z-index:1;margin:-16px;border:16px solid var(--bg);border-radius:38px;box-sizing:content-box;pointer-events:none}
+.pane::after{content:"";position:absolute;inset:0;border-radius:22px;border:1px solid rgba(244,242,233,.16)}
+.cap{position:absolute;left:12px;top:12px;padding:6px 11px;border-radius:999px;background:rgba(19,20,18,.78);color:var(--ink);font-size:13px;line-height:1}
+
+/* kitchens strip */
+
+/* ---- catalog sections (real store data, rev in snapshot.json) ---- */
+.dep,.knoll,.passwrap{position:relative;z-index:1;background:var(--bg);padding:clamp(72px,10vw,132px) var(--gut) 0}
+.kicker{margin:0 0 10px;font-family:var(--num);font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--lime)}
+html[lang="ko"] .kicker,html[lang="ja"] .kicker,html[lang="th"] .kicker{letter-spacing:.08em}
+.sec-line{margin:0;font-family:var(--serif);font-weight:400;font-size:clamp(26px,3vw,44px);line-height:1.2;letter-spacing:-.02em;text-wrap:balance;word-break:keep-all}
+html:not([lang="ko"]) .sec-line{word-break:normal}
+html[lang="ja"] .sec-line,html[lang="th"] .sec-line{line-break:strict;word-break:auto-phrase}
+.dep-head{margin-bottom:28px}
+.dep-grid{display:grid;grid-template-columns:minmax(0,1fr) clamp(260px,25vw,360px);gap:clamp(20px,3vw,48px);align-items:start}
+.board{background:var(--board);border:1px solid #23251f;border-radius:14px;padding:14px 14px 10px;box-shadow:inset 0 1px 0 #ffffff08,0 30px 60px -30px #000c;min-width:0}
+.board-cols{display:grid;grid-template-columns:minmax(0,1fr) auto 64px;gap:16px;padding:2px 10px 10px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#8c917f}
+.board-rows{list-style:none;margin:0;padding:0}
+.row{all:unset;box-sizing:border-box;display:grid;grid-template-columns:minmax(0,1fr) auto 64px;gap:16px;align-items:center;width:100%;padding:7px 10px;border-radius:8px;cursor:pointer;border-top:1px solid #1b1d18}
+.row:hover,.row[aria-pressed="true"]{background:#171915}
+.row[aria-pressed="true"]{box-shadow:inset 3px 0 0 var(--lime)}
+.row:focus-visible{outline:2px solid var(--lime);outline-offset:2px}
+.cells{display:flex;flex-wrap:wrap;gap:2px;min-width:0}
+.wd{display:inline-flex;gap:2px}
+.t{display:inline-grid;place-items:center;width:.95em;height:1.62em;font:600 17px/1 var(--sans);color:var(--cream);background:linear-gradient(#22241f 0 49%,#0c0d0b 49% 51%,#1a1c18 51%);border-radius:3px;text-transform:none;transform-origin:50% 50%;backface-visibility:hidden}
+.t.w{width:1.3em}
+.t.sp{background:#151613}
+.cls .t{color:#c9cdbd}
+.flag{justify-self:end;padding:4px 8px;border-radius:4px;font-size:11px;line-height:1;font-weight:600;letter-spacing:.06em;color:var(--tag-ink);background:var(--lime);white-space:nowrap}
+.flag:empty{display:none}
+.gate{margin:0;position:sticky;top:24px}
+.gate-media{position:relative;aspect-ratio:9/16;border-radius:22px;overflow:hidden;background:radial-gradient(120% 80% at 50% 30%,#2a2e25,#0d0e0c);box-shadow:0 0 0 1px #2c2f27,0 40px 80px -40px #000}
+.gate-img,.gate-vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:opacity .35s ease}
+.gate-img.contain{object-fit:contain;padding:14%}
+.gate-media .off{opacity:0;pointer-events:none}
+.gate-cap{display:flex;flex-direction:column;gap:4px;padding:14px 4px 0}
+.gate-title{font-family:var(--serif);font-weight:400;font-size:18px;line-height:1.3}
+.gate-sub{font-size:13px;line-height:1.5;color:var(--muted)}
+.knoll-head{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:16px;margin-bottom:24px}
+.tabs{display:flex;gap:4px;padding:4px;border:1px solid var(--line);border-radius:999px}
+.tabs button{font:13px/1 var(--sans);color:var(--muted);background:none;border:0;border-radius:999px;padding:8px 14px;cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.table{background:var(--table);border-radius:18px;padding:clamp(18px,3vw,40px);background-image:linear-gradient(#ffffff10 1px,transparent 1px),linear-gradient(90deg,#ffffff10 1px,transparent 1px);background-size:32px 32px;box-shadow:inset 0 0 0 1px #00000014}
+.knoll-grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:clamp(10px,1.6vw,22px)}
+.knoll-grid li{position:relative;aspect-ratio:1}
+.it{all:unset;box-sizing:border-box;position:relative;display:grid;place-items:center;width:100%;height:100%;cursor:default;border-radius:12px}
+.it img{position:absolute;left:8%;top:8%;width:84%;height:84%;object-fit:contain;filter:drop-shadow(0 5px 4px rgba(30,34,24,.28));transition:transform .28s cubic-bezier(.2,.8,.2,1),filter .28s;transform:rotate(var(--r,0deg))}
+.it:hover img,.it:focus img{transform:translateY(-8px) scale(1.06);filter:drop-shadow(0 16px 12px rgba(30,34,24,.3))}
+.it:focus-visible{outline:2px solid var(--table-ink);outline-offset:2px}
+.lab{position:absolute;left:50%;bottom:-4px;transform:translate(-50%,4px);display:flex;gap:6px;align-items:center;max-width:150%;padding:5px 9px;border-radius:999px;background:var(--table-ink);color:#f2f0e6;font-size:12px;line-height:1.2;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:2}
+.lab i{font-style:normal;font-size:10px;font-weight:600;color:var(--tag-ink);background:var(--lime);border-radius:3px;padding:2px 4px}
+.it:hover .lab,.it:focus .lab{opacity:1;transform:translate(-50%,0)}
+.knoll-grid.settle img{animation:settle .7s cubic-bezier(.2,.9,.25,1.15) both;animation-delay:calc(var(--i) * 35ms)}
+@keyframes settle{from{transform:translateY(-26px) rotate(calc(var(--r,0deg) * 4))}to{transform:rotate(var(--r,0deg))}}
+.passwrap{padding-bottom:clamp(72px,10vw,132px)}
+.pass{display:grid;grid-template-columns:minmax(0,1fr) clamp(180px,24%,260px);max-width:980px;margin:0 auto;color:var(--paper-ink);filter:drop-shadow(0 30px 40px rgba(0,0,0,.45))}
+.pass-main,.pass-stub{background:var(--paper)}
+.pass-main{border-radius:18px 0 0 18px;padding:clamp(20px,3vw,36px);display:flex;flex-direction:column;gap:12px;min-width:0;
+  -webkit-mask:radial-gradient(circle 12px at 100% 0,#0000 98%,#000) top/100% 51% no-repeat,radial-gradient(circle 12px at 100% 100%,#0000 98%,#000) bottom/100% 51% no-repeat;
+  mask:radial-gradient(circle 12px at 100% 0,#0000 98%,#000) top/100% 51% no-repeat,radial-gradient(circle 12px at 100% 100%,#0000 98%,#000) bottom/100% 51% no-repeat}
+.pass-stub{position:relative;border-radius:0 18px 18px 0;padding:clamp(16px,2vw,24px);display:flex;flex-direction:column;gap:10px;align-items:stretch;border-left:2px dashed var(--paper-line);
+  -webkit-mask:radial-gradient(circle 12px at 0 0,#0000 98%,#000) top/100% 51% no-repeat,radial-gradient(circle 12px at 0 100%,#0000 98%,#000) bottom/100% 51% no-repeat;
+  mask:radial-gradient(circle 12px at 0 0,#0000 98%,#000) top/100% 51% no-repeat,radial-gradient(circle 12px at 0 100%,#0000 98%,#000) bottom/100% 51% no-repeat}
+.pass-top{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-bottom:12px;border-bottom:1px solid var(--paper-line)}
+.pass-brand{display:flex;align-items:center;gap:8px;font-family:var(--num);font-size:18px}
+.pass-brand img{border-radius:7px}
+.pass-kind{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#6c6a5f}
+.pass-label{margin:6px 0 0;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#6c6a5f}
+.pass-title{margin:0;font-family:var(--serif);font-weight:400;font-size:clamp(28px,3.4vw,46px);line-height:1.15;letter-spacing:-.02em;text-wrap:balance;word-break:keep-all}
+.pass-desc{margin:0;font-size:14px;line-height:1.6;color:#4d4c43;max-width:46ch}
+.pass-fields{display:flex;flex-wrap:wrap;gap:12px 36px;margin:4px 0 0}
+.pass-fields dt{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6c6a5f}
+.pass-fields dd{margin:4px 0 0;font-family:var(--num);font-size:19px;font-variant-numeric:tabular-nums}
+html[lang="ja"] .pass-fields dd,html[lang="th"] .pass-fields dd,html[lang="ko"] .pass-fields dd,html[lang="ru"] .pass-fields dd,html[lang="mn"] .pass-fields dd{font-family:var(--sans)}
+.pass-items{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.pass-items li{width:58px;height:58px;border-radius:10px;background:#e7e0d0;display:grid;place-items:center;overflow:hidden}
+.pass-items img{max-width:84%;max-height:84%;object-fit:contain}
+.pass-items li.k img{max-width:100%;max-height:100%;object-fit:cover;width:100%;height:100%}
+.pass-img{width:100%;height:auto;aspect-ratio:4/3;object-fit:contain;border-radius:10px;background:#e7e0d0}
+.pass-code{font-family:var(--num);font-size:15px;letter-spacing:.08em;word-break:break-all}
+.pass-short{font-family:var(--num);font-size:13px;color:#6c6a5f;font-variant-numeric:tabular-nums}
+.pass-bar{margin-top:auto;height:54px;border-radius:2px;background:repeating-linear-gradient(90deg,var(--paper-ink) 0 2px,transparent 2px 4px,var(--paper-ink) 4px 5px,transparent 5px 8px,var(--paper-ink) 8px 11px,transparent 11px 12px)}
+.asof{flex-basis:100%;font-size:12px;color:#8c917f}
+@media (max-width:760px){
+  .dep-grid{grid-template-columns:1fr}
+  .gate{position:relative;top:0;order:-1;max-width:420px}
+  .gate-media{aspect-ratio:4/5}
+  .board{padding:10px 6px 6px}
+  .board-cols{display:none}
+  .row{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"d d" "c f";row-gap:6px;padding:9px 8px}
+  .row .dest{grid-area:d}.row .cls{grid-area:c}.row .flag{grid-area:f}
+  .t{font-size:12px}
+  .knoll-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .lab{font-size:11px}
+  .pass{grid-template-columns:1fr}
+  .pass-main{border-radius:18px 18px 0 0;-webkit-mask:radial-gradient(circle 12px at 0 100%,#0000 98%,#000) left/51% 100% no-repeat,radial-gradient(circle 12px at 100% 100%,#0000 98%,#000) right/51% 100% no-repeat;mask:radial-gradient(circle 12px at 0 100%,#0000 98%,#000) left/51% 100% no-repeat,radial-gradient(circle 12px at 100% 100%,#0000 98%,#000) right/51% 100% no-repeat}
+  .pass-stub{border-radius:0 0 18px 18px;border-left:0;border-top:2px dashed var(--paper-line);display:grid;grid-template-columns:110px 1fr;align-items:center;column-gap:14px;-webkit-mask:radial-gradient(circle 12px at 0 0,#0000 98%,#000) left/51% 100% no-repeat,radial-gradient(circle 12px at 100% 0,#0000 98%,#000) right/51% 100% no-repeat;mask:radial-gradient(circle 12px at 0 0,#0000 98%,#000) left/51% 100% no-repeat,radial-gradient(circle 12px at 100% 0,#0000 98%,#000) right/51% 100% no-repeat}
+  .pass-img{grid-row:span 3}
+  .pass-bar{grid-column:1/-1;height:40px}
+}
+@media (prefers-reduced-motion:reduce){.knoll-grid.settle img{animation:none}.it img,.lab{transition:none}}
+.foot{position:relative;z-index:1;background:var(--bg);border-top:1px solid var(--line);padding:28px var(--gut) 44px;display:flex;flex-wrap:wrap;align-items:center;gap:14px 28px;font-size:14px;color:var(--muted)}
+.foot-brand{display:flex;align-items:center;gap:12px;margin-right:auto;font-family:var(--num);font-size:21px;color:var(--ink)}
+.foot-brand img{width:40px;height:40px;border-radius:10px;display:block}
+.foot a{color:var(--ink);text-underline-offset:3px}
+.foot-links{display:flex;flex-wrap:wrap;gap:8px 20px}
+.operator{display:flex;flex-wrap:wrap;gap:6px 12px}
+.credits,.disclosure{flex-basis:100%}
+.disclosure summary{cursor:pointer;width:max-content;max-width:100%;color:var(--ink)}
+.disclosure p{margin:12px 0 0;max-width:72ch;font-size:13px;line-height:1.75}
+.notes{margin:12px 0 0;max-width:78ch;font-size:13px;line-height:1.75}
+.credits summary{cursor:pointer;width:max-content;color:var(--ink)}
+.credits ul{margin:12px 0 0;padding-left:18px;max-width:78ch;font-size:13px;line-height:1.75}
+.credits a{color:var(--muted)}
+
+@media (max-width:640px){
+  html[lang="ja"] .tag,html[lang="es"] .tag,html[lang="th"] .tag,html[lang="ru"] .tag,html[lang="mn"] .tag{font-size:11.5px;padding:5px 8px 6px}
+  .l1{bottom:clamp(40px,9vh,80px)}
+  .tag{font-size:13px;padding:5px 9px 6px}
+}
+</style>
+<script>
+/* Decide live vs static before first paint. Static = reduced motion, no WebGL2, or the module never arriving. */
+(function(){var d=document.documentElement,q=location.search.indexOf('still=')>-1,ok=false;
+try{ok=!!document.createElement('canvas').getContext('webgl2')}catch(e){}
+if(q){d.classList.add('capture','live');return}
+if(ok&&!matchMedia('(prefers-reduced-motion: reduce)').matches){d.classList.add('live');
+setTimeout(function(){if(!window.__ptBoot){d.classList.remove('live');d.classList.add('static')}},12000)}
+else d.classList.add('static');})();
+</script>
 </head>
 <body>
-<a class="skip" href="#main" data-ko="본문으로 이동" data-en="Skip to content">본문으로 이동</a>
-<header class="nav wrap">
-<a class="wordmark" href="#"><img src="assets/apple-touch-icon.png" width="180" height="180" alt=""><span>Pantrip</span></a>
-<nav aria-label="메뉴" data-ko-aria="메뉴" data-en-aria="Main"><a class="nav-link" href="#photo" data-ko="등록" data-en="Add">등록</a><a class="nav-link" href="#kitchens" data-ko="주방" data-en="Kitchens">주방</a><a class="nav-link" href="#reminders" data-ko="기한" data-en="Dates">기한</a><button id="language" type="button" aria-label="Switch to English">EN</button></nav>
-</header>
-<main id="main">
+<canvas id="gl" aria-hidden="true"></canvas>
+<label class="lang-pick"><span class="sr-only" data-t="lang">언어</span><select id="lang-select">
+  <option value="ko" lang="ko">한국어</option><option value="en" lang="en">English</option><option value="ja" lang="ja">日本語</option><option value="es" lang="es">Español</option><option value="de" lang="de">Deutsch</option><option value="fr" lang="fr">Français</option><option value="th" lang="th">ไทย</option><option value="ru" lang="ru">Русский</option><option value="mn" lang="mn">Монгол</option><option value="vi" lang="vi">Tiếng Việt</option>
+</select></label>
+<main>
+  <section id="s1" class="scrolly" data-t-aria="s1">
+    <div class="stage">
+      <picture class="still"><source media="(max-width:700px)" srcset="assets/stills/s1-tall.webp"><img src="assets/stills/s1-wide.webp" data-t-alt="alt1" alt="" width="1440" height="900"></picture>
+      <a class="brand" href="https://pantrip.app/"><img src="assets/app-icon.png" alt="" width="30" height="30">Pantrip</a>
+      <h1 class="line l1" data-t="l1">냉장고 안쪽,<br>잊혀진 것들.</h1>
+      <div class="stamp" aria-hidden="true"><span id="stamp">10.14</span></div>
+    </div>
+  </section>
 
-<section class="panel cream hero">
-<div class="wrap hero-layout">
-<div class="hero-copy">
-<h1 class="brand-title" data-ko="우리 집 식품을 한눈에" data-en="Your food, at a glance">우리 집 식품을 한눈에</h1>
-<div class="actions"><a class="button primary" href="#photo" data-ko="어떻게 쓰나요 ↓" data-en="See how it works ↓">어떻게 쓰나요 ↓</a><a class="button secondary" href="#kitchens" data-ko="주방 둘러보기 ↓" data-en="Browse kitchens ↓">주방 둘러보기 ↓</a></div>
-</div>
-<div class="demo-stage">
-<div class="phone">
-<div class="phone-screen">
-<img id="demo-poster" src="assets/pantrip-demo-en-poster.jpg" data-fallback-src="assets/hero-en.webp" width="720" height="1565" alt="Pantrip 앱의 주방 화면" data-ko-alt="Pantrip 앱의 주방 화면" data-en-alt="The Pantrip Kitchen screen" fetchpriority="high">
-<video id="demo-video" data-src="assets/pantrip-demo-en.mp4" poster="assets/pantrip-demo-en-poster.jpg" width="720" height="1565" muted loop playsinline preload="metadata" aria-label="Pantrip 앱 데모" data-ko-aria="Pantrip 앱 데모" data-en-aria="Pantrip app demo"></video>
-</div>
-</div>
-<div class="demo-controls">
-<div class="demo-chapters" id="demo-chapters" aria-label="데모 장면" data-ko-aria="데모 장면" data-en-aria="Demo chapters" hidden>
-<button type="button" data-demo-time="0" data-ko="주방" data-en="Kitchen" aria-pressed="true">주방</button>
-<button type="button" data-demo-time="5" data-ko="사진 등록" data-en="Photo" aria-pressed="false">사진 등록</button>
-<button type="button" data-demo-time="12.5" data-ko="3D" data-en="3D" aria-pressed="false">3D</button>
-<button type="button" data-demo-time="16.5" data-ko="주방들" data-en="Kitchens" aria-pressed="false">주방들</button>
-<button type="button" data-demo-time="20.5" data-ko="위젯" data-en="Widgets" aria-pressed="false">위젯</button>
-</div>
-<button class="demo-toggle" id="demo-toggle" type="button" aria-label="데모 재생" data-ko-aria="데모 재생" data-en-aria="Play demo" disabled>
-<svg id="demo-play-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 11 7-11 7Z"/></svg>
-<svg id="demo-pause-icon" viewBox="0 0 24 24" aria-hidden="true" hidden><path d="M7 5h4v14H7zM14 5h4v14h-4z"/></svg>
-</button>
-</div>
-</div>
-</div>
-</section>
+  <section id="s2" class="scrolly" data-t-aria="s2">
+    <div class="stage">
+      <picture class="still"><source media="(max-width:700px)" srcset="assets/stills/s2-tall.webp"><img src="assets/stills/s2-wide.webp" data-t-alt="alt2" alt="" width="1440" height="900" loading="lazy"></picture>
+      <h2 class="line l2" data-t="l2">찰칵, 끝.</h2>
+      <div class="vf anim-only" aria-hidden="true"><i></i><i></i><i></i><i></i><span class="vf-focus"></span></div>
+      <div class="shutter anim-only" aria-hidden="true"></div>
+      <div class="tags anim-only" aria-hidden="true"></div>
+      <div class="marks static-only" aria-hidden="true" data-still="s2"></div>
+      <div class="flash anim-only" aria-hidden="true"></div>
+    </div>
+  </section>
 
-<section class="panel night" id="photo" aria-labelledby="photo-title">
-<div class="wrap">
-<header class="panel-head">
-<h2 id="photo-title" data-ko="사진으로 간편하게 등록" data-en="Snap a photo. Add your food.">사진으로 간편하게 등록</h2>
-</header>
-<div class="cutout-flow">
-<figure class="photo-before"><img src="assets/photo-original.jpg" width="900" height="567" loading="lazy" alt="물방울이 맺힌 사과 두 개를 찍은 원본 사진" data-ko-alt="물방울이 맺힌 사과 두 개를 찍은 원본 사진" data-en-alt="Original photo of two apples with water droplets"></figure>
-<svg class="flow-arrow" viewBox="0 0 48 48" aria-hidden="true"><path d="M6 24h32M27 13l11 11-11 11"/></svg>
-<figure class="photo-after"><img src="assets/photo-cutout.webp" width="900" height="585" loading="lazy" alt="배경을 지우고 사과만 남긴 결과" data-ko-alt="배경을 지우고 사과만 남긴 결과" data-en-alt="The same apples with the background removed"></figure>
-</div>
-</div>
-</section>
+  <section id="s3" class="scrolly" data-t-aria="s3">
+    <div class="stage">
+      <picture class="still"><source media="(max-width:700px)" srcset="assets/stills/s3-tall.webp"><img src="assets/stills/s3-wide.webp" data-t-alt="alt3" alt="" width="1440" height="900" loading="lazy"></picture>
+      <h2 class="line l3" data-t="l3">내 냉장고 그대로, 손 안의 주방에.</h2>
+      <div class="pane anim-only" data-pane="a"><span class="cap" data-t="capA">우리 집 냉장고</span></div>
+      <div class="pane anim-only" data-pane="b"><span class="cap" data-t="capB">Pantrip 주방</span></div>
+      <div class="tags anim-only" aria-hidden="true"></div>
+      <div class="marks static-only" aria-hidden="true" data-still="s3"></div>
+    </div>
+  </section>
 
-<section class="panel sand" id="shapes" aria-labelledby="shapes-title">
-<div class="wrap">
-<header class="panel-head">
-<h2 id="shapes-title" data-ko="내 식품을 3D로 차곡차곡" data-en="Your food, now in 3D">내 식품을 3D로 차곡차곡</h2>
-</header>
-<ul class="shape-row">
-<li><img src="assets/product-cup.webp" width="321" height="440" loading="lazy" alt="테이크아웃 컵 모양 3D 모델" data-ko-alt="테이크아웃 컵 모양 3D 모델" data-en-alt="Takeaway cup 3D model"></li>
-<li><img src="assets/product-wine.webp" width="189" height="440" loading="lazy" alt="유리병 모양 3D 모델" data-ko-alt="유리병 모양 3D 모델" data-en-alt="Glass bottle 3D model"></li>
-<li><img src="assets/product-jar.webp" width="292" height="440" loading="lazy" alt="둥근 병 모양 3D 모델" data-ko-alt="둥근 병 모양 3D 모델" data-en-alt="Round bottle 3D model"></li>
-</ul>
-</div>
-</section>
+  <section id="departures" class="dep" aria-labelledby="dep-title">
+    <div class="dep-head">
+      <p class="kicker" data-c="depLabel">출발</p>
+      <h2 id="dep-title" class="sec-line" data-c="dep">오늘은 어느 주방으로?</h2>
+    </div>
+    <div class="dep-grid">
+      <div class="board">
+        <div class="board-cols" aria-hidden="true"><span data-c="colDest">목적지</span><span data-c="colClass">등급</span><span></span></div>
+        <ul id="board-rows" class="board-rows" data-c-aria="boardAria"></ul>
+      </div>
+      <figure class="gate">
+        <div class="gate-media"><img class="gate-img" alt="" width="540" height="960"><video class="gate-vid" muted playsinline loop preload="none" aria-hidden="true"></video></div>
+        <figcaption class="gate-cap" aria-live="polite"><b class="gate-title"></b><span class="gate-sub"></span></figcaption>
+      </figure>
+    </div>
+  </section>
 
-<section class="panel cream" id="kitchens" aria-labelledby="kitchens-title">
-<div class="wrap">
-<header class="panel-head">
-<h2 id="kitchens-title" data-ko="취향대로 고르는 나만의 주방" data-en="A kitchen that’s all yours">취향대로 고르는 나만의 주방</h2>
-</header>
-<ul class="kitchen-grid" aria-label="주방 테마 12종" data-ko-aria="주방 테마 12종" data-en-aria="12 kitchen themes">
-<li><figure><img src="assets/kitchen-hanok.jpg" width="533" height="320" loading="lazy" alt="조선 한양 주방 테마" data-ko-alt="조선 한양 주방 테마" data-en-alt="Joseon Hanyang kitchen theme"><figcaption data-ko="조선 한양" data-en="Joseon Hanyang">조선 한양</figcaption></figure></li>
-<li><figure><img src="assets/kitchen-seaside.jpg" width="533" height="320" loading="lazy" alt="리우 코파카바나 주방 테마" data-ko-alt="리우 코파카바나 주방 테마" data-en-alt="Rio Copacabana kitchen theme"><figcaption data-ko="리우 코파카바나" data-en="Rio Copacabana">리우 코파카바나</figcaption></figure></li>
-<li><figure><img src="assets/kitchen-cafe.jpg" width="480" height="320" loading="lazy" alt="카페 주방 테마" data-ko-alt="카페 주방 테마" data-en-alt="Café kitchen theme"><figcaption data-ko="카페" data-en="Café">카페</figcaption></figure></li>
-<li><figure><img src="assets/kitchen-skyIsland.jpg" width="533" height="320" loading="lazy" alt="하늘 해적선 주방 테마" data-ko-alt="하늘 해적선 주방 테마" data-en-alt="Sky galleon kitchen theme"><figcaption data-ko="하늘 해적선" data-en="Sky galleon">하늘 해적선</figcaption></figure></li>
-<li><figure><img src="assets/kitchen-spaceship.jpg" width="533" height="320" loading="lazy" alt="우주선 주방 테마" data-ko-alt="우주선 주방 테마" data-en-alt="Spaceship kitchen theme"><figcaption data-ko="우주선" data-en="Spaceship">우주선</figcaption></figure></li>
-<li><figure><img src="assets/kitchen-japanese.jpg" width="480" height="320" loading="lazy" alt="교토 주방 테마" data-ko-alt="교토 주방 테마" data-en-alt="Kyoto kitchen theme"><figcaption data-ko="교토" data-en="Kyoto">교토</figcaption></figure></li>
-<li><figure><img src="assets/kitchen-carFactory.jpg" width="533" height="320" loading="lazy" alt="자동차 공장 주방 테마" data-ko-alt="자동차 공장 주방 테마" data-en-alt="Car factory kitchen theme"><figcaption data-ko="자동차 공장" data-en="Car factory">자동차 공장</figcaption></figure></li>
-<li><figure><img src="assets/kitchen-gingerbreadHouse.jpg" width="533" height="320" loading="lazy" alt="과자집 주방 테마" data-ko-alt="과자집 주방 테마" data-en-alt="Gingerbread house kitchen theme"><figcaption data-ko="과자집" data-en="Gingerbread house">과자집</figcaption></figure></li>
-<li><figure><img src="assets/kitchen-athensTemple.jpg" width="533" height="320" loading="lazy" alt="아테네 아크로폴리스 주방 테마" data-ko-alt="아테네 아크로폴리스 주방 테마" data-en-alt="Athens Acropolis kitchen theme"><figcaption data-ko="아테네 아크로폴리스" data-en="Athens Acropolis">아테네 아크로폴리스</figcaption></figure></li>
-<li><figure><img src="assets/kitchen-mongolianGer.jpg" width="480" height="320" loading="lazy" alt="몽골 게르 주방 테마" data-ko-alt="몽골 게르 주방 테마" data-en-alt="Mongolian ger kitchen theme"><figcaption data-ko="몽골 게르" data-en="Mongolian ger">몽골 게르</figcaption></figure></li>
-<li><figure><img src="assets/kitchen-cappadociaCave.jpg" width="533" height="320" loading="lazy" alt="카파도키아 주방 테마" data-ko-alt="카파도키아 주방 테마" data-en-alt="Cappadocia kitchen theme"><figcaption data-ko="카파도키아" data-en="Cappadocia">카파도키아</figcaption></figure></li>
-<li><figure><img src="assets/kitchen-bocageFieldKitchen.jpg" width="533" height="320" loading="lazy" alt="오버룬 야전 주방 테마" data-ko-alt="오버룬 야전 주방 테마" data-en-alt="Overloon field kitchen theme"><figcaption data-ko="오버룬 야전 주방" data-en="Overloon field kitchen">오버룬 야전 주방</figcaption></figure></li>
-</ul>
-</div>
-</section>
+  <section id="knolling" class="knoll" aria-labelledby="knoll-title">
+    <div class="knoll-head">
+      <h2 id="knoll-title" class="sec-line" data-c="knoll">하나씩, 제자리에.</h2>
+      <div class="tabs" role="group" data-c-aria="show"><button type="button" aria-pressed="true" data-cat="products" data-c="prod">상품</button><button type="button" aria-pressed="false" data-cat="decor" data-c="decor">장식</button></div>
+    </div>
+    <div class="table"><ul id="knoll-grid" class="knoll-grid"></ul></div>
+  </section>
 
-<section class="panel night" id="reminders" aria-labelledby="reminders-title">
-<div class="wrap">
-<header class="panel-head">
-<h2 id="reminders-title" data-ko="소비기한, 잊기 전에 챙겨요" data-en="Keep track of use-by dates">소비기한, 잊기 전에 챙겨요</h2>
-</header>
-<figure class="widgets">
-<div class="widget-row">
-<img class="widget-medium" src="assets/widget-medium-ko.webp" data-ko-src="assets/widget-medium-ko.webp" data-en-src="assets/widget-medium-en.webp" width="900" height="420" loading="lazy" alt="중간 크기 위젯 예시: 냉장고의 사과 D-0, 우유 D-3, 달걀 D-7" data-ko-alt="중간 크기 위젯 예시: 냉장고의 사과 D-0, 우유 D-3, 달걀 D-7" data-en-alt="Medium widget preview: Fridge with Apple D-0, Milk D-3, Eggs D-7">
-<img class="widget-small" src="assets/widget-small-ko.webp" data-ko-src="assets/widget-small-ko.webp" data-en-src="assets/widget-small-en.webp" width="420" height="420" loading="lazy" alt="작은 위젯 예시: 냉장고의 사과 D-0" data-ko-alt="작은 위젯 예시: 냉장고의 사과 D-0" data-en-alt="Small widget preview: Apple in the Fridge, D-0">
-</div>
-</figure>
-</div>
-</section>
-
-<section class="panel cream closing" id="contact" aria-labelledby="contact-title">
-<div class="wrap">
-<img class="closing-icon" src="assets/apple-touch-icon.png" width="180" height="180" loading="lazy" alt="">
-<h2 id="contact-title" data-ko="도움이 필요하신가요?" data-en="Need a hand?">도움이 필요하신가요?</h2>
-<div class="actions"><a class="button primary" href="mailto:jsh097610@gmail.com" data-ko="메일로 문의하기 ↗" data-en="Email us ↗">메일로 문의하기 ↗</a></div>
-<p class="legal-links"><a href="privacy.html" data-ko="개인정보 처리방침 · 7개 언어" data-en="Privacy policy · 7 languages">개인정보 처리방침 · 7개 언어</a><a href="terms.html" data-ko="서비스 이용약관 · 7개 언어" data-en="Terms of service · 7 languages">서비스 이용약관 · 7개 언어</a><a href="support.html" data-ko="고객지원 및 계정 삭제" data-en="Support and account deletion">고객지원 및 계정 삭제</a></p>
-</div>
-</section>
-
-<details class="disclosure" id="demo-notes">
-<summary><span data-ko="이미지·데모 안내" data-en="Image &amp; demo notes">이미지·데모 안내</span></summary>
-<p data-ko="영문 데모는 실제 앱 녹화와 상품·주방 렌더 이미지의 편집 장면을 연결했습니다. 식품과 위젯 정보는 예시 데이터입니다." data-en="The English demo combines app recordings with edited product and kitchen renders. Food and widget information is sample data.">영문 데모는 실제 앱 녹화와 상품·주방 렌더 이미지의 편집 장면을 연결했습니다. 식품과 위젯 정보는 예시 데이터입니다.</p>
-<p><span data-ko="예시 사과 사진: 미국 농무부 농업연구청(USDA ARS), 퍼블릭 도메인" data-en="Sample apple photo: USDA Agricultural Research Service, public domain">예시 사과 사진: 미국 농무부 농업연구청(USDA ARS), 퍼블릭 도메인</span> · <a href="https://commons.wikimedia.org/wiki/File:Fuji_apple.jpg" data-ko="출처" data-en="Source">출처</a></p>
-<p data-ko="앱의 실제 주방 이미지입니다. 일부 주방은 포인트가 필요합니다." data-en="Actual kitchen artwork from the app. Some kitchens require points.">앱의 실제 주방 이미지입니다. 일부 주방은 포인트가 필요합니다.</p>
-<p data-ko="기한 알림은 식품의 안전성을 판단하지 않아요. 상품 표시와 보관 방법을 따라 주세요." data-en="Dates are reminders, not food safety advice. Follow the product label and storage instructions.">기한 알림은 식품의 안전성을 판단하지 않아요. 상품 표시와 보관 방법을 따라 주세요.</p>
-</details>
-
-<details class="disclosure" id="google-signin">
-<summary><span data-ko="Google 로그인은 어디에 사용하나요?" data-en="What is Google sign-in used for?">Google 로그인은 어디에 사용하나요?</span></summary>
-<p data-ko="Google 로그인은 Google 계정을 Pantrip 계정에 연결하여 다시 로그인하고 계정의 포인트와 구매한 아이템을 이용하는 데 사용합니다. Google 비밀번호는 Pantrip에 전달되지 않습니다. 식품 동기화에 별도로 동의하면 식품 정보와 사진을 계정에 저장하고 다른 로그인 기기와 동기화합니다. 로그인만으로 식품 동기화가 켜지지는 않습니다. Apple 로그인도 지원합니다." data-en="Google sign-in connects your Google identity to your Pantrip account so you can sign in again and access account points and purchased items. Pantrip does not receive your Google password. If you separately enable food sync, food records and photos are saved to your account and synced with other signed-in devices. Signing in does not automatically enable food sync. Apple sign-in is also supported.">Google 로그인은 Google 계정을 Pantrip 계정에 연결하여 다시 로그인하고 계정의 포인트와 구매한 아이템을 이용하는 데 사용합니다. Google 비밀번호는 Pantrip에 전달되지 않습니다. 식품 동기화에 별도로 동의하면 식품 정보와 사진을 계정에 저장하고 다른 로그인 기기와 동기화합니다. 로그인만으로 식품 동기화가 켜지지는 않습니다. Apple 로그인도 지원합니다.</p>
-</details>
+  <section id="pass" class="passwrap" aria-labelledby="pass-title">
+    <article class="pass">
+      <div class="pass-main">
+        <header class="pass-top"><span class="pass-brand"><img src="assets/app-icon.png" alt="" width="26" height="26">Pantrip</span><span class="pass-kind" data-c="pass">탑승권</span></header>
+        <p class="pass-label" data-c="collection">컬렉션</p>
+        <h2 id="pass-title" class="pass-title"></h2>
+        <p class="pass-desc"></p>
+        <dl class="pass-fields"><div><dt data-c="valid">유효 기간</dt><dd class="pass-dates"></dd></div><div><dt data-c="includes">포함</dt><dd class="pass-count"></dd></div></dl>
+        <ul class="pass-items"></ul>
+      </div>
+      <div class="pass-stub" aria-hidden="true">
+        <img class="pass-img" alt="" width="900" height="568">
+        <span class="pass-code"></span>
+        <span class="pass-short"></span>
+        <span class="pass-bar"></span>
+      </div>
+    </article>
+  </section>
 
 </main>
-<footer class="wrap">
-<div class="footer-row"><a class="wordmark" href="#"><span>Pantrip</span></a><div class="operator"><span data-ko="운영자 전성훈" data-en="Seonghun Jeon">운영자 전성훈</span><a href="mailto:jsh097610@gmail.com">jsh097610@gmail.com</a></div><a id="privacy-link" href="privacy.html" data-ko="개인정보 처리방침" data-en="Privacy policy">개인정보 처리방침</a><a href="support.html" data-ko="고객지원" data-en="Support">고객지원</a><a href="terms.html" data-ko="서비스 이용약관" data-en="Terms of service">서비스 이용약관</a><small>© 2026</small></div>
-<span class="dot-text footer-mark" aria-hidden="true">Pantrip</span>
+<footer class="foot">
+  <div class="foot-brand"><img src="assets/app-icon.png" alt="" width="40" height="40">Pantrip</div>
+  <nav class="foot-links" data-t-aria="footNav" aria-label="정책과 지원"><a id="privacy-link" href="privacy.html" data-t="privacy">개인정보 처리방침</a><a href="terms.html" data-t="terms">서비스 이용약관</a><a href="support.html" data-t="support">고객지원 및 계정 삭제</a></nav>
+  <div class="operator"><span data-t="operator">운영자 전성훈</span><a href="mailto:jsh097610@gmail.com">jsh097610@gmail.com</a></div>
+  <small>© 2026 Pantrip</small>
+  <small class="asof" id="asof"></small>
+  <details class="disclosure" id="google-signin">
+    <summary data-t="gsiQ">Google 로그인은 어디에 사용하나요?</summary>
+    <p data-t="gsiA">Google 로그인은 Google 계정을 Pantrip 계정에 연결하여 다시 로그인하고 계정의 포인트와 구매한 아이템을 이용하는 데 사용합니다. Google 비밀번호는 Pantrip에 전달되지 않습니다. 식품 동기화에 별도로 동의하면 식품 정보와 사진을 계정에 저장하고 다른 로그인 기기와 동기화합니다. 로그인만으로 식품 동기화가 켜지지는 않습니다. Apple 로그인도 지원합니다.</p>
+  </details>
+  <details class="credits" id="notes">
+    <summary data-t="credits">출처</summary>
+    <p class="notes"><span data-t="notesDates">기한 알림은 식품의 안전성을 판단하지 않아요. 상품 표시와 보관 방법을 따라 주세요.</span> <span data-t="notesPoints">일부 주방은 포인트가 필요합니다.</span></p>
+    <ul id="credits-list"></ul>
+  </details>
 </footer>
-</body></html>
+
+<script>
+/* Language: one catalog for every visible or spoken string. Official terms (kitchen names, D-day wording) come from the Pantrip app's Localizable.xcstrings. */
+(function(){
+var SUP=['ko','en','ja','es','de','fr','th','ru','mn','vi'];
+var FONTS={ja:'Shippori+Mincho:wght@500&family=Zen+Kaku+Gothic+New:wght@400;500',th:'Noto+Serif+Thai:wght@400;500&family=Noto+Sans+Thai:wght@400;500',ru:'Lora:wght@400;500&family=PT+Sans',mn:'Lora:wght@400;500&family=PT+Sans'};
+var L={
+ko:{title:'Pantrip 주방 이야기',l1:['냉장고 안쪽,','잊혀진 것들.'],l2:'찰칵, 끝.',l3:'내 냉장고 그대로, 손 안의 주방에.',capA:'우리 집 냉장고',capB:'Pantrip 주방',kTitle:'주방은 취향대로.',strip:'Pantrip 주방 미리보기. 좌우로 넘겨 보세요',s1:'잊혀진 것들',s2:'사진 한 장으로 등록',s3:'내 냉장고와 똑같은 Pantrip 주방',
+ alt1:'불빛이 흐려진 냉장고 안쪽, 색이 바래고 시든 우유와 두부, 양배추',alt2:'사과 사진의 배경이 지워지고, 사과가 기한 태그와 함께 냉장고 선반에 놓인 모습',alt3:'왼쪽은 실제 냉장고, 오른쪽은 같은 음식이 같은 자리에 놓인 Pantrip 한옥 주방. 음식마다 기한 태그가 떠 있다',lang:'언어',credits:'출처',
+ cr:{models:'3D 상품과 한옥 주방: Pantrip 앱에 실제로 쓰이는 모델 (한옥 팩 외부 라이선스 없음). 웹용으로 압축했고, 일부 라벨 그림은 단색으로 바꿨습니다. 주방 이미지는 Pantrip 앱 화면입니다.',apple:'사과 사진',pd:'퍼블릭 도메인',astro:'우주선 주방 일부 모델',mod:'수정됨',brook:'브루클린 주방 창밖 풍경',fonts:'글꼴',r3d:'3D 렌더링'}},
+en:{title:'Pantrip Kitchen Story',l1:['At the back of the fridge,','the things we forgot.'],l2:'Snap. Done.',l3:'Your fridge as it is, in a kitchen in your hand.',capA:'Your fridge',capB:'Pantrip kitchen',kTitle:'Kitchens to your taste.',strip:'Pantrip kitchen previews. Scroll sideways.',s1:'Forgotten food',s2:'Add food with one photo',s3:'Your fridge, mirrored in Pantrip',
+ alt1:'The dim back of a fridge: milk, tofu and cabbage, faded and wilting',alt2:'An apple photo loses its background and the apple lands on a fridge shelf with an expiry tag',alt3:'Your fridge on the left; on the right, the same food in the same places in the Pantrip hanok kitchen, each with an expiry tag',lang:'Language',credits:'Credits',
+ cr:{models:'3D products and the hanok kitchen: the models used in the Pantrip app (the hanok pack has no third-party licences). Compressed for the web; some label art replaced with flat colour. Kitchen images are Pantrip app screens.',apple:'Apple photo',pd:'public domain',astro:'Model in the spaceship kitchen',mod:'modified',brook:'View from the Brooklyn kitchen window',fonts:'Fonts',r3d:'3D rendering'}},
+ja:{title:'Pantrip キッチンストーリー',l1:['冷蔵庫の奥で、','忘れられたもの。'],l2:'パシャ、それだけ。',l3:'うちの冷蔵庫が、そのまま手のひらのキッチンに。',capA:'うちの冷蔵庫',capB:'Pantripのキッチン',kTitle:'キッチンは好みで。',strip:'Pantripのキッチン一覧。横にスクロールできます',s1:'忘れられた食べもの',s2:'写真一枚で登録',s3:'冷蔵庫そのままのPantripキッチン',
+ alt1:'明かりの弱まった冷蔵庫の奥で、色あせてしおれた牛乳、豆腐、キャベツ',alt2:'りんごの写真から背景が消え、りんごが期限タグと一緒に冷蔵庫の棚に置かれる',alt3:'左は実際の冷蔵庫、右は同じ食べものが同じ場所に並んだPantripの韓屋キッチン。それぞれに期限のタグ',lang:'言語',credits:'クレジット',
+ cr:{models:'3D商品と韓屋キッチン：Pantripアプリで実際に使われているモデル（韓屋パックに外部ライセンスはありません）。Web用に圧縮し、一部のラベル画像は単色に置き換えています。キッチン画像はPantripアプリの画面です。',apple:'りんごの写真',pd:'パブリックドメイン',astro:'宇宙船キッチンの一部モデル',mod:'改変',brook:'ブルックリンキッチンの窓の景色',fonts:'フォント',r3d:'3Dレンダリング'}},
+es:{title:'Pantrip, historia de una cocina',l1:['Al fondo de la nevera,','lo que olvidamos.'],l2:'Clic. Listo.',l3:'Tu nevera tal cual, en una cocina en tu mano.',capA:'Tu nevera',capB:'Cocina Pantrip',kTitle:'Una cocina a tu gusto.',strip:'Cocinas de Pantrip. Desliza hacia los lados.',s1:'Comida olvidada',s2:'Añade comida con una foto',s3:'Tu nevera, reflejada en Pantrip',
+ alt1:'El fondo de una nevera en penumbra: leche, tofu y repollo, descoloridos y marchitos',alt2:'La foto de una manzana pierde el fondo y la manzana llega a un estante de la nevera con su etiqueta de fecha',alt3:'A la izquierda, tu nevera; a la derecha, la misma comida en los mismos lugares de la cocina hanok de Pantrip, cada una con su etiqueta de fecha',lang:'Idioma',credits:'Créditos',
+ cr:{models:'Productos 3D y cocina hanok: los modelos que usa la app Pantrip (el paquete hanok no tiene licencias de terceros). Comprimidos para la web; algunas etiquetas pasaron a color liso. Las imágenes de cocinas son pantallas de la app Pantrip.',apple:'Foto de la manzana',pd:'dominio público',astro:'Modelo de la cocina nave espacial',mod:'modificado',brook:'Vista desde la ventana de la cocina de Brooklyn',fonts:'Tipografías',r3d:'Render 3D'}},
+de:{title:'Pantrip Küchengeschichte',l1:['Hinten im Kühlschrank,','leise vergessen.'],l2:'Klick. Fertig.',l3:'Dein Kühlschrank, genau so, als Küche in deiner Hand.',capA:'Dein Kühlschrank',capB:'Pantrip-Küche',kTitle:'Eine Küche nach deinem Geschmack.',strip:'Pantrip-Küchen. Seitlich scrollen.',s1:'Vergessene Lebensmittel',s2:'Mit einem Foto hinzufügen',s3:'Dein Kühlschrank, gespiegelt in Pantrip',
+ alt1:'Das dunkle Innere eines Kühlschranks: Milch, Tofu und Kohl, verblasst und welk',alt2:'Ein Apfelfoto verliert seinen Hintergrund, der Apfel landet mit Haltbarkeits-Etikett im Kühlschrankfach',alt3:'Links dein Kühlschrank, rechts dieselben Lebensmittel an denselben Plätzen in der Hanok-Küche von Pantrip, jedes mit Haltbarkeits-Etikett',lang:'Sprache',credits:'Nachweise',
+ cr:{models:'3D-Produkte und Hanok-Küche: die Modelle aus der Pantrip-App (für das Hanok-Paket gibt es keine Fremdlizenzen). Für das Web komprimiert; einige Etiketten sind einfarbig ersetzt. Die Küchenbilder sind Screens der Pantrip-App.',apple:'Apfelfoto',pd:'gemeinfrei',astro:'Modell in der Raumschiff-Küche',mod:'bearbeitet',brook:'Fensterblick der Brooklyn-Küche',fonts:'Schriften',r3d:'3D-Rendering'}},
+fr:{title:'Pantrip, l’histoire d’une cuisine',l1:['Au fond du réfrigérateur,','ce qu’on a oublié.'],l2:'Clic. C’est fait.',l3:'Votre réfrigérateur tel quel, dans une cuisine au creux de la main.',capA:'Votre réfrigérateur',capB:'Cuisine Pantrip',kTitle:'Une cuisine à votre goût.',strip:'Cuisines Pantrip. Faites défiler sur le côté.',s1:'Aliments oubliés',s2:'Ajouter un aliment en une photo',s3:'Votre réfrigérateur, reflété dans Pantrip',
+ alt1:'Le fond d’un réfrigérateur dans la pénombre : lait, tofu et chou, ternes et flétris',alt2:'La photo d’une pomme perd son arrière-plan ; la pomme se pose sur une étagère du réfrigérateur avec son étiquette de date',alt3:'À gauche, votre réfrigérateur ; à droite, les mêmes aliments aux mêmes places dans la cuisine hanok de Pantrip, chacun avec son étiquette de date',lang:'Langue',credits:'Crédits',
+ cr:{models:'Produits 3D et cuisine hanok : les modèles utilisés dans l’app Pantrip (le pack hanok n’a pas de licence tierce). Compressés pour le web ; certaines étiquettes sont passées en aplat de couleur. Les images de cuisines sont des écrans de l’app Pantrip.',apple:'Photo de la pomme',pd:'domaine public',astro:'Modèle de la cuisine vaisseau',mod:'modifié',brook:'Vue depuis la fenêtre de la cuisine Brooklyn',fonts:'Polices',r3d:'Rendu 3D'}},
+th:{title:'Pantrip เรื่องเล่าในครัว',l1:['ในซอกลึกของตู้เย็น','ของที่ถูกลืม'],l2:'แชะ เสร็จแล้ว',l3:'ตู้เย็นที่บ้าน ย้ายมาอยู่ในครัวบนฝ่ามือ',capA:'ตู้เย็นที่บ้าน',capB:'ครัว Pantrip',kTitle:'เลือกครัวตามใจชอบ',strip:'ตัวอย่างครัวของ Pantrip เลื่อนไปด้านข้างได้',s1:'อาหารที่ถูกลืม',s2:'เพิ่มอาหารด้วยรูปเดียว',s3:'ตู้เย็นของคุณใน Pantrip',
+ alt1:'ด้านในตู้เย็นที่ไฟสลัว นม เต้าหู้ และกะหล่ำปลีที่สีซีดและเหี่ยว',alt2:'พื้นหลังของรูปแอปเปิ้ลหายไป แล้วแอปเปิ้ลไปวางบนชั้นตู้เย็นพร้อมป้ายวันหมดอายุ',alt3:'ซ้ายคือตู้เย็นจริง ขวาคือครัวบ้านฮันอกของ Pantrip ที่มีอาหารชุดเดียวกันวางอยู่ที่เดิม พร้อมป้ายวันหมดอายุ',lang:'ภาษา',credits:'เครดิต',
+ cr:{models:'สินค้า 3D และครัวบ้านฮันอก: โมเดลที่ใช้จริงในแอป Pantrip (แพ็กฮันอกไม่มีไลเซนส์ภายนอก) บีบอัดสำหรับเว็บ และเปลี่ยนลายฉลากบางส่วนเป็นสีพื้น ภาพครัวเป็นหน้าจอจากแอป Pantrip',apple:'รูปแอปเปิ้ล',pd:'สาธารณสมบัติ',astro:'โมเดลบางส่วนในครัวยานอวกาศ',mod:'ดัดแปลง',brook:'วิวนอกหน้าต่างครัวบรูคลิน',fonts:'ฟอนต์',r3d:'การเรนเดอร์ 3D'}},
+ru:{title:'Pantrip: история одной кухни',l1:['В глубине холодильника —','то, о чём забыли.'],l2:'Щёлк — и готово.',l3:'Ваш холодильник как есть — на кухне в вашей ладони.',capA:'Ваш холодильник',capB:'Кухня Pantrip',kTitle:'Кухня на ваш вкус.',strip:'Кухни Pantrip. Листайте в сторону.',s1:'Забытые продукты',s2:'Добавить продукт одним фото',s3:'Ваш холодильник в Pantrip',
+ alt1:'Полутёмная глубина холодильника: молоко, тофу и капуста, поблёкшие и увядшие',alt2:'С фото яблока исчезает фон, и яблоко ложится на полку холодильника с ярлыком срока',alt3:'Слева ваш холодильник, справа те же продукты на тех же местах в кухне-ханоке Pantrip, у каждого ярлык срока',lang:'Язык',credits:'Источники',
+ cr:{models:'3D-товары и кухня-ханок: модели из приложения Pantrip (у пакета ханока нет сторонних лицензий). Сжаты для веба; часть этикеток заменена сплошным цветом. Изображения кухонь — экраны приложения Pantrip.',apple:'Фото яблока',pd:'общественное достояние',astro:'Модель на кухне-звездолёте',mod:'изменено',brook:'Вид из окна бруклинской кухни',fonts:'Шрифты',r3d:'3D-рендеринг'}},
+mn:{title:'Pantrip гал тогооны түүх',l1:['Хөргөгчийн гүнд','мартагдсан зүйлс.'],l2:'Нэг зураг, боллоо.',l3:'Гэрийн хөргөгч тань яг хэвээрээ, алган дээрх гал тогоонд.',capA:'Гэрийн хөргөгч',capB:'Pantrip гал тогоо',kTitle:'Гал тогоогоо дураараа.',strip:'Pantrip-ийн гал тогоонууд. Хажуу тийш гүйлгэнэ үү.',s1:'Мартагдсан хүнс',s2:'Нэг зургаар нэмэх',s3:'Таны хөргөгч Pantrip-д',
+ alt1:'Гэрэл бүдгэрсэн хөргөгчийн гүнд өнгөө алдаж хатсан сүү, дүпү, байцаа',alt2:'Алимны зургийн арын дэвсгэр арилж, алим хугацааны шошготойгоо хөргөгчийн тавиур дээр буув',alt3:'Зүүн талд жинхэнэ хөргөгч, баруун талд мөнөөх хүнс яг ижил байрандаа Pantrip-ийн ханог гал тогоонд, тус бүр хугацааны шошготой',lang:'Хэл',credits:'Эх сурвалж',
+ cr:{models:'3D бараа ба ханог гал тогоо: Pantrip аппад ашигладаг загварууд (ханог багцад гуравдагч этгээдийн лиценз байхгүй). Вэбэд зориулж шахсан, зарим шошгыг нэг өнгөөр сольсон. Гал тогооны зургууд нь Pantrip аппын дэлгэц.',apple:'Алимны зураг',pd:'нийтийн өмч',astro:'Сансрын хөлгийн гал тогооны загвар',mod:'өөрчилсөн',brook:'Бруклин гал тогооны цонхны үзэмж',fonts:'Фонт',r3d:'3D дүрслэл'}},
+vi:{title:'Pantrip: chuyện căn bếp',l1:['Góc trong cùng tủ lạnh,','những thứ bị lãng quên.'],l2:'Tách. Xong.',l3:'Tủ lạnh nhà bạn, y nguyên, trong căn bếp trên tay.',capA:'Tủ lạnh nhà bạn',capB:'Bếp Pantrip',kTitle:'Căn bếp theo ý bạn.',strip:'Các căn bếp Pantrip. Vuốt sang ngang.',s1:'Thực phẩm bị lãng quên',s2:'Thêm đồ ăn bằng một tấm ảnh',s3:'Tủ lạnh của bạn trong Pantrip',
+ alt1:'Góc tối trong tủ lạnh: sữa, đậu phụ và bắp cải phai màu, héo úa',alt2:'Ảnh quả táo được xóa nền, quả táo nằm trên kệ tủ lạnh cùng nhãn hạn dùng',alt3:'Bên trái là tủ lạnh thật, bên phải là cùng thực phẩm ở đúng chỗ cũ trong căn bếp hanok của Pantrip, mỗi món có nhãn hạn dùng',lang:'Ngôn ngữ',credits:'Ghi công',
+ cr:{models:'Sản phẩm 3D và bếp hanok: các mô hình dùng trong ứng dụng Pantrip (gói hanok không có giấy phép bên thứ ba). Đã nén cho web; một số nhãn được thay bằng màu trơn. Ảnh các căn bếp là màn hình ứng dụng Pantrip.',apple:'Ảnh quả táo',pd:'phạm vi công cộng',astro:'Mô hình trong bếp tàu vũ trụ',mod:'đã chỉnh sửa',brook:'Cảnh ngoài cửa sổ bếp Brooklyn',fonts:'Phông chữ',r3d:'Kết xuất 3D'}}
+};
+/* footer: policy links, operator, Google sign-in explanation, notes (site wording for ko/en) */
+var FT={"ko":{"footNav":"정책과 지원","privacy":"개인정보 처리방침","terms":"서비스 이용약관","support":"고객지원 및 계정 삭제","operator":"운영자 전성훈","gsiQ":"Google 로그인은 어디에 사용하나요?","gsiA":"Google 로그인은 Google 계정을 Pantrip 계정에 연결하여 다시 로그인하고 계정의 포인트와 구매한 아이템을 이용하는 데 사용합니다. Google 비밀번호는 Pantrip에 전달되지 않습니다. 식품 동기화에 별도로 동의하면 식품 정보와 사진을 계정에 저장하고 다른 로그인 기기와 동기화합니다. 로그인만으로 식품 동기화가 켜지지는 않습니다. Apple 로그인도 지원합니다.","notesDates":"기한 알림은 식품의 안전성을 판단하지 않아요. 상품 표시와 보관 방법을 따라 주세요.","notesPoints":"일부 주방은 포인트가 필요합니다."},"en":{"footNav":"Policies and support","privacy":"Privacy Policy","terms":"Terms of Service","support":"Support and account deletion","operator":"Seonghun Jeon","gsiQ":"What is Google sign-in used for?","gsiA":"Google sign-in connects your Google identity to your Pantrip account so you can sign in again and access account points and purchased items. Pantrip does not receive your Google password. If you separately enable food sync, food records and photos are saved to your account and synced with other signed-in devices. Signing in does not automatically enable food sync. Apple sign-in is also supported.","notesDates":"Dates are reminders, not food safety advice. Follow the product label and storage instructions.","notesPoints":"Some kitchens require points."},"ja":{"footNav":"ポリシーとサポート","privacy":"プライバシーポリシー","terms":"利用規約","support":"サポート・アカウント削除","operator":"運営者 Seonghun Jeon","gsiQ":"Googleログインは何に使われますか？","gsiA":"Googleログインは、GoogleアカウントをPantripアカウントに連携し、再ログインやアカウントのポイント・購入したアイテムの利用に使います。PantripがGoogleのパスワードを受け取ることはありません。食品同期を別途オンにすると、食品の記録と写真がアカウントに保存され、ログインしている他の端末と同期されます。ログインしただけでは食品同期はオンになりません。Appleでのログインにも対応しています。","notesDates":"期限のお知らせは食品の安全性を判断するものではありません。商品の表示と保存方法に従ってください。","notesPoints":"一部のキッチンにはポイントが必要です。"},"es":{"footNav":"Políticas y ayuda","privacy":"Política de privacidad","terms":"Condiciones del servicio","support":"Ayuda y eliminación de cuenta","operator":"Responsable: Seonghun Jeon","gsiQ":"¿Para qué se usa el inicio de sesión con Google?","gsiA":"El inicio de sesión con Google vincula tu identidad de Google a tu cuenta de Pantrip para que puedas volver a iniciar sesión y acceder a los puntos y artículos comprados de tu cuenta. Pantrip no recibe tu contraseña de Google. Si activas por separado la sincronización de alimentos, los registros de alimentos y las fotos se guardan en tu cuenta y se sincronizan con otros dispositivos con la sesión iniciada. Iniciar sesión no activa automáticamente la sincronización de alimentos. También se admite el inicio de sesión con Apple.","notesDates":"Las fechas son recordatorios, no consejos de seguridad alimentaria. Sigue la etiqueta del producto y sus instrucciones de conservación.","notesPoints":"Algunas cocinas requieren puntos."},"de":{"footNav":"Richtlinien und Support","privacy":"Datenschutzerklärung","terms":"Nutzungsbedingungen","support":"Support und Kontolöschung","operator":"Betreiber: Seonghun Jeon","gsiQ":"Wofür wird die Google-Anmeldung verwendet?","gsiA":"Die Google-Anmeldung verknüpft deine Google-Identität mit deinem Pantrip-Konto, damit du dich erneut anmelden und auf die Punkte und gekauften Artikel deines Kontos zugreifen kannst. Pantrip erhält dein Google-Passwort nicht. Wenn du die Lebensmittel-Synchronisierung separat aktivierst, werden Lebensmitteleinträge und Fotos in deinem Konto gespeichert und mit anderen angemeldeten Geräten synchronisiert. Die Anmeldung allein aktiviert die Lebensmittel-Synchronisierung nicht. Die Anmeldung mit Apple wird ebenfalls unterstützt.","notesDates":"Die Fristen sind Erinnerungen, keine Hinweise zur Lebensmittelsicherheit. Beachte Etikett und Lagerhinweise des Produkts.","notesPoints":"Einige Küchen erfordern Punkte."},"fr":{"footNav":"Règles et assistance","privacy":"Politique de confidentialité","terms":"Conditions d’utilisation","support":"Assistance et suppression du compte","operator":"Exploitant : Seonghun Jeon","gsiQ":"À quoi sert la connexion avec Google ?","gsiA":"La connexion avec Google associe votre identité Google à votre compte Pantrip pour vous permettre de vous reconnecter et d’accéder aux points et aux articles achetés de votre compte. Pantrip ne reçoit pas votre mot de passe Google. Si vous activez séparément la synchronisation des aliments, les fiches d’aliments et les photos sont enregistrées dans votre compte et synchronisées avec vos autres appareils connectés. La connexion seule n’active pas la synchronisation des aliments. La connexion avec Apple est également prise en charge.","notesDates":"Les dates sont des rappels, pas des conseils de sécurité alimentaire. Suivez l’étiquette du produit et ses conseils de conservation.","notesPoints":"Certaines cuisines nécessitent des points."},"th":{"footNav":"นโยบายและความช่วยเหลือ","privacy":"นโยบายความเป็นส่วนตัว","terms":"ข้อกำหนดการใช้บริการ","support":"ความช่วยเหลือและการลบบัญชี","operator":"ผู้ดำเนินการ Seonghun Jeon","gsiQ":"ใช้การเข้าสู่ระบบด้วย Google เพื่ออะไร","gsiA":"การเข้าสู่ระบบด้วย Google จะเชื่อมตัวตน Google ของคุณกับบัญชี Pantrip เพื่อให้คุณเข้าสู่ระบบอีกครั้งและใช้คะแนนและไอเทมที่ซื้อในบัญชีได้ Pantrip ไม่ได้รับรหัสผ่าน Google ของคุณ หากคุณเปิดการซิงค์อาหารแยกต่างหาก ข้อมูลอาหารและรูปภาพจะถูกบันทึกในบัญชีและซิงค์กับอุปกรณ์อื่นที่เข้าสู่ระบบอยู่ การเข้าสู่ระบบเพียงอย่างเดียวจะไม่เปิดการซิงค์อาหาร รองรับการเข้าสู่ระบบด้วย Apple ด้วย","notesDates":"การแจ้งเตือนวันหมดอายุไม่ได้ตัดสินความปลอดภัยของอาหาร โปรดทำตามฉลากสินค้าและวิธีการเก็บรักษา","notesPoints":"บางครัวต้องใช้คะแนน"},"ru":{"footNav":"Правила и поддержка","privacy":"Политика конфиденциальности","terms":"Условия использования","support":"Поддержка и удаление аккаунта","operator":"Оператор: Seonghun Jeon","gsiQ":"Для чего используется вход через Google?","gsiA":"Вход через Google связывает ваш аккаунт Google с аккаунтом Pantrip, чтобы вы могли снова войти и пользоваться баллами и купленными предметами аккаунта. Pantrip не получает ваш пароль Google. Если вы отдельно включите синхронизацию продуктов, записи о продуктах и фотографии сохраняются в аккаунте и синхронизируются с другими устройствами, на которых выполнен вход. Сам по себе вход не включает синхронизацию продуктов. Вход через Apple также поддерживается.","notesDates":"Напоминания о сроках не оценивают безопасность продуктов. Следуйте маркировке и условиям хранения.","notesPoints":"Для некоторых кухонь нужны баллы."},"mn":{"footNav":"Бодлого ба тусламж","privacy":"Нууцлалын бодлого","terms":"Үйлчилгээний нөхцөл","support":"Тусламж ба бүртгэл устгах","operator":"Үйлчилгээ эрхлэгч: Seonghun Jeon","gsiQ":"Google-ээр нэвтрэхийг юунд ашигладаг вэ?","gsiA":"Google-ээр нэвтрэх нь таны Google бүртгэлийг Pantrip бүртгэлтэй холбож, дахин нэвтрэх болон бүртгэлийн оноо, худалдаж авсан зүйлсээ ашиглахад зориулагдсан. Pantrip таны Google нууц үгийг хүлээн авахгүй. Хүнс синк хийхийг тусад нь асаавал хүнсний мэдээлэл, зураг таны бүртгэлд хадгалагдаж, нэвтэрсэн бусад төхөөрөмжтэй синк хийгдэнэ. Зөвхөн нэвтэрснээр хүнс синк автоматаар асахгүй. Apple-ээр нэвтрэхийг мөн дэмждэг.","notesDates":"Хугацааны сануулга нь хүнсний аюулгүй байдлыг тодорхойлохгүй. Бүтээгдэхүүний шошго, хадгалах зааврыг дагана уу.","notesPoints":"Зарим гал тогоонд оноо шаардлагатай."},"vi":{"footNav":"Chính sách và hỗ trợ","privacy":"Chính sách quyền riêng tư","terms":"Điều khoản dịch vụ","support":"Hỗ trợ và xóa tài khoản","operator":"Đơn vị vận hành: Seonghun Jeon","gsiQ":"Đăng nhập bằng Google được dùng để làm gì?","gsiA":"Đăng nhập bằng Google liên kết danh tính Google của bạn với tài khoản Pantrip để bạn đăng nhập lại và sử dụng điểm cùng các vật phẩm đã mua trong tài khoản. Pantrip không nhận mật khẩu Google của bạn. Nếu bạn bật riêng tính năng đồng bộ thực phẩm, dữ liệu thực phẩm và ảnh sẽ được lưu vào tài khoản và đồng bộ với các thiết bị khác đã đăng nhập. Chỉ đăng nhập thì không tự động bật đồng bộ thực phẩm. Cũng hỗ trợ đăng nhập bằng Apple.","notesDates":"Nhắc hạn dùng không đánh giá độ an toàn của thực phẩm. Hãy làm theo nhãn sản phẩm và hướng dẫn bảo quản.","notesPoints":"Một số căn bếp cần điểm."}};
+for(var lk in FT) for(var fk in FT[lk]) L[lk][fk]=FT[lk][fk];
+/* credits text (licence names and titles stay as published) */
+var CR={
+ko:{models:'3D 상품과 한옥·원룸 주방: Pantrip 앱에 실제로 쓰이는 모델. 웹용으로 압축했고, 일부 라벨과 질감은 단색이나 원본 이미지로 바꿨습니다.',catalog:'주방·상품·장식 이미지와 입장 영상: Pantrip 스토어 카탈로그',night:'원룸 창밖 야경'},
+en:{models:'3D products and the hanok and studio kitchens: the models used in the Pantrip app. Compressed for the web; some labels and textures replaced with flat colour or their source images.',catalog:'Kitchen, product and decor images and entrance videos: Pantrip store catalog',night:'Night view from the studio window'},
+ja:{models:'3D商品と韓屋・ワンルームのキッチン：Pantripアプリで実際に使われているモデル。Web用に圧縮し、一部のラベルや質感は単色や元画像に置き換えています。',catalog:'キッチン・商品・飾りの画像と入室動画：Pantripストアのカタログ',night:'ワンルームの窓の夜景'},
+es:{models:'Productos 3D y las cocinas hanok y estudio: los modelos que usa la app Pantrip. Comprimidos para la web; algunas etiquetas y texturas pasaron a color liso o a su imagen original.',catalog:'Imágenes de cocinas, productos y decoración, y videos de entrada: catálogo de la tienda Pantrip',night:'Vista nocturna desde la ventana del estudio'},
+de:{models:'3D-Produkte sowie Hanok- und Studio-Küche: die Modelle aus der Pantrip-App. Für das Web komprimiert; einige Etiketten und Texturen sind einfarbig oder durch ihre Originalbilder ersetzt.',catalog:'Bilder von Küchen, Produkten und Deko sowie Eingangsvideos: Katalog des Pantrip-Shops',night:'Nachtblick aus dem Studiofenster'},
+fr:{models:'Produits 3D et cuisines hanok et studio : les modèles utilisés dans l’app Pantrip. Compressés pour le web ; certaines étiquettes et textures sont passées en aplat ou en image d’origine.',catalog:'Images des cuisines, produits et décorations, et vidéos d’entrée : catalogue de la boutique Pantrip',night:'Vue nocturne depuis la fenêtre du studio'},
+th:{models:'สินค้า 3D และครัวบ้านฮันอกกับห้องสตูดิโอ: โมเดลที่ใช้จริงในแอป Pantrip บีบอัดสำหรับเว็บ และเปลี่ยนฉลากกับพื้นผิวบางส่วนเป็นสีพื้นหรือภาพต้นฉบับ',catalog:'ภาพครัว สินค้า ของตกแต่ง และวิดีโอเข้าบ้าน: แคตตาล็อกร้านค้า Pantrip',night:'วิวกลางคืนนอกหน้าต่างห้องสตูดิโอ'},
+ru:{models:'3D-товары и кухни ханок и студия: модели из приложения Pantrip. Сжаты для веба; часть этикеток и текстур заменена сплошным цветом или исходными изображениями.',catalog:'Изображения кухонь, товаров и декора, видео входа: каталог магазина Pantrip',night:'Ночной вид из окна студии'},
+mn:{models:'3D бараа, ханог болон студи гал тогоо: Pantrip аппад ашигладаг загварууд. Вэбэд зориулж шахсан, зарим шошго, бүтцийг нэг өнгө эсвэл эх зургаар сольсон.',catalog:'Гал тогоо, бараа, чимэглэлийн зураг болон орох видео: Pantrip дэлгүүрийн каталог',night:'Студийн цонхны шөнийн үзэмж'},
+vi:{models:'Sản phẩm 3D cùng bếp hanok và bếp studio: các mô hình dùng trong ứng dụng Pantrip. Đã nén cho web; một số nhãn và chất liệu được thay bằng màu trơn hoặc ảnh gốc.',catalog:'Ảnh bếp, sản phẩm, đồ trang trí và video vào cửa: danh mục cửa hàng Pantrip',night:'Cảnh đêm ngoài cửa sổ studio'}
+};
+for(var k in CR) for(var f in CR[k]) L[k].cr[f]=CR[k][f];
+/* the app's own D-day format per language (Localizable.xcstrings "D-%lld") */
+function dday(n,lang){
+  var cat; try{cat=new Intl.PluralRules(lang).select(n)}catch(e){cat='other'}
+  switch(lang){
+    case 'ja': return 'あと'+n+'日';
+    case 'es': return n===1?'Falta 1 día':'Faltan '+n+' días';
+    case 'fr': return 'J-'+n;
+    case 'th': return 'อีก '+n+' วัน';
+    case 'ru': return cat==='one'?'Остался '+n+' день':cat==='many'?'Осталось '+n+' дней':'Осталось '+n+' дня';
+    case 'mn': return n+' өдөр үлдсэн';
+    default: return 'D-'+n;
+  }
+}
+var fmt={};
+function date(d,lang){ var f=fmt[lang]; if(!f){ try{f=new Intl.DateTimeFormat(lang,{month:'numeric',day:'numeric'})}catch(e){f=new Intl.DateTimeFormat('en',{month:'numeric',day:'numeric'})} fmt[lang]=f } return f.format(d) }
+function pick(){
+  try{var s=localStorage.getItem('pt-lang'); if(SUP.indexOf(s)>-1) return s}catch(e){}
+  var ls=navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language||'en'];
+  for(var i=0;i<ls.length;i++){var p=String(ls[i]).toLowerCase().split('-')[0]; if(SUP.indexOf(p)>-1) return p}
+  return 'en';
+}
+function loadFont(lang){
+  var q=FONTS[lang]; if(!q||document.getElementById('font-'+lang)) return;
+  var l=document.createElement('link'); l.id='font-'+lang; l.rel='stylesheet'; l.href='https://fonts.googleapis.com/css2?family='+q+'&display=swap'; document.head.appendChild(l);
+}
+function credits(c){
+  var a=function(h,t){return '<a href="'+h+'">'+t+'</a>'};
+  return ['<li>'+c.models+'</li>',
+    '<li>'+c.catalog+' (rev 709)</li>',
+    '<li>'+c.night+': “Seoul-night-pano-cropped.jpg” by KLuwak, '+a('https://creativecommons.org/licenses/by-sa/3.0','CC BY-SA 3.0')+' ('+a('https://commons.wikimedia.org/wiki/File:Seoul-night-pano-cropped.jpg','Wikimedia Commons')+')</li>',
+    '<li>'+c.apple+': “Fuji apple”, USDA Agricultural Research Service, '+c.pd+' ('+a('https://commons.wikimedia.org/wiki/File:Fuji_apple.jpg','Wikimedia Commons')+')</li>',
+    '<li>'+c.astro+': “Rigged Astronaut” by J-Toastie, '+a('https://creativecommons.org/licenses/by/3.0/','CC BY 3.0')+', '+a('https://poly.pizza/m/0oBRDJ9Zl9','poly.pizza')+' ('+c.mod+')</li>',
+    '<li>'+c.fonts+': Gloock, Gowun Batang, Gowun Dodum, Shippori Mincho, Zen Kaku Gothic New, Noto Serif Thai, Noto Sans Thai, Lora, PT Sans (SIL Open Font License). '+c.r3d+': three.js (MIT)</li>'].join('');
+}
+var I={lang:'en',dday:function(n){return dday(n,I.lang)},date:function(d){return date(d,I.lang)},t:function(k){return L[I.lang][k]}};
+/* static fallback frames: label positions measured on the rendered stills (fractions of the image) */
+var MARKS={"s2":{"wide":{"w":1440,"h":900,"tags":[[0.5,0.3687,7,"fresh"]]},"tall":{"w":780,"h":1688,"tags":[[0.5,0.4362,7,"fresh"]]}},"s3":{"wide":{"w":1440,"h":900,"tags":[[0.6968,0.4618,5,"fresh"],[0.7576,0.4974,2,"soon"],[0.7054,0.3219,1,"urgent"],[0.7591,0.3477,3,"soon"],[0.8126,0.453,7,"fresh"]],"panes":[[0.05,0.1889],[0.5056,0.1889]]},"tall":{"w":780,"h":1688,"tags":[[0.443,0.7702,5,"fresh"],[0.5549,0.7891,2,"soon"],[0.4593,0.6968,1,"urgent"],[0.5573,0.7103,3,"soon"],[0.6561,0.7655,7,"fresh"]],"panes":[[0.0513,0.205],[0.0513,0.5983]]}}};
+var STILL_DAY=new Date(2026,9,26);
+function renderMarks(){
+  if(!document.documentElement.classList.contains('static')) return;
+  var tall=matchMedia('(max-width:700px)').matches, c=L[I.lang];
+  [].forEach.call(document.querySelectorAll('.marks'),function(layer){
+    var m=MARKS[layer.dataset.still]; m=m&&m[tall?'tall':'wide']; if(!m){layer.innerHTML='';return}
+    var box=layer.getBoundingClientRect(), iw=m.w, ih=m.h, s=Math.max(box.width/iw,box.height/ih), dx=(box.width-iw*s)/2, dy=(box.height-ih*s)/2;
+    var html='';
+    (m.panes||[]).forEach(function(p,i){ html+='<span class="cap" style="left:'+(dx+p[0]*iw*s+12).toFixed(1)+'px;top:'+(dy+p[1]*ih*s+12).toFixed(1)+'px">'+(i?c.capB:c.capA)+'</span>' });
+    (m.tags||[]).forEach(function(t){ html+='<span class="tag" data-s="'+t[3]+'" style="visibility:visible;transform:translate('+(dx+t[0]*iw*s).toFixed(1)+'px,'+(dy+t[1]*ih*s).toFixed(1)+'px) translate(-50%,-100%) translateY(-6px)"><b>'+dday(t[2],I.lang)+'</b></span>' });
+    layer.innerHTML=html;
+  });
+}
+function apply(lang){
+  I.lang=lang; var c=L[lang], d=document.documentElement;
+  d.lang=lang; loadFont(lang);
+  [].forEach.call(document.querySelectorAll('[data-t]'),function(el){ var v=c[el.dataset.t]; if(Array.isArray(v)){ el.textContent=''; v.forEach(function(s,i){ if(i) el.appendChild(document.createElement('br')); el.appendChild(document.createTextNode(s)) }) } else el.textContent=v });
+  [].forEach.call(document.querySelectorAll('[data-t-aria]'),function(el){ el.setAttribute('aria-label',c[el.dataset.tAria]) });
+  [].forEach.call(document.querySelectorAll('[data-t-alt]'),function(el){ el.alt=c[el.dataset.tAlt] });
+  document.getElementById('credits-list').innerHTML=credits(c.cr);
+  document.getElementById('stamp').textContent=date(d.classList.contains('static')?STILL_DAY:new Date(2026,9,14),lang);
+  var sel=document.getElementById('lang-select'); if(sel.value!==lang) sel.value=lang;
+  renderMarks();
+  document.dispatchEvent(new CustomEvent('pt-lang',{detail:lang}));
+}
+window.PT_I18N=I;
+apply(pick());
+document.getElementById('lang-select').addEventListener('change',function(e){ var v=e.target.value; try{localStorage.setItem('pt-lang',v)}catch(err){} apply(v) });
+addEventListener('resize',renderMarks);
+})();
+</script>
+<script>
+/* Catalog sections: real Pantrip store data (assets/catalog/snapshot.json). Item text uses the catalog's 7 locales; de/fr/vi fall back to English. No prices. */
+(function(){
+var UI={
+ko:{depLabel:'출발',dep:'오늘은 어느 주방으로?',colDest:'목적지',colClass:'등급',newTag:'신규',tiers:{basic:'스탠다드',extended:'디럭스',signature:'시그니처',prestige:'프레스티지'},knoll:'하나씩, 제자리에.',prod:'상품',decor:'장식',show:'보기',pass:'탑승권',collection:'컬렉션',valid:'유효 기간',includes:'포함',boardAria:'주방 출발 안내판. 하나를 고르면 입장 화면이 재생됩니다',asOf:'카탈로그 기준 {d} · rev {r}'},
+en:{depLabel:'Departures',dep:'Which kitchen today?',colDest:'Destination',colClass:'Class',newTag:'New',tiers:{basic:'Standard',extended:'Deluxe',signature:'Signature',prestige:'Prestige'},knoll:'Everything in its place.',prod:'Products',decor:'Decor',show:'Show',pass:'Boarding pass',collection:'Collection',valid:'Valid',includes:'Includes',boardAria:'Kitchen departures board. Pick one to watch its entrance.',asOf:'Catalog as of {d} · rev {r}'},
+ja:{depLabel:'出発',dep:'今日はどのキッチンへ？',colDest:'行き先',colClass:'クラス',newTag:'新着',tiers:{basic:'スタンダード',extended:'デラックス',signature:'シグネチャー',prestige:'プレステージ'},knoll:'ひとつずつ、定位置に。',prod:'商品',decor:'飾り',show:'表示',pass:'搭乗券',collection:'コレクション',valid:'有効期間',includes:'内容',boardAria:'キッチンの出発案内板。選ぶと入室画面が再生されます',asOf:'{d}時点のカタログ · rev {r}'},
+es:{depLabel:'Salidas',dep:'¿A qué cocina hoy?',colDest:'Destino',colClass:'Clase',newTag:'Nuevo',tiers:{basic:'Estándar',extended:'De lujo',signature:'De autor',prestige:'Prestigio'},knoll:'Cada cosa en su sitio.',prod:'Productos',decor:'Decoración',show:'Mostrar',pass:'Tarjeta de embarque',collection:'Colección',valid:'Válido',includes:'Incluye',boardAria:'Panel de salidas de cocinas. Elige una para ver su entrada.',asOf:'Catálogo al {d} · rev {r}'},
+de:{depLabel:'Abflug',dep:'Welche Küche heute?',colDest:'Ziel',colClass:'Klasse',newTag:'Neu',tiers:{basic:'Standard',extended:'Deluxe',signature:'Exklusiv',prestige:'Prestige'},knoll:'Alles an seinem Platz.',prod:'Produkte',decor:'Deko',show:'Anzeigen',pass:'Bordkarte',collection:'Sammlung',valid:'Gültig',includes:'Enthält',boardAria:'Abflugtafel der Küchen. Wähle eine, um ihren Eingang zu sehen.',asOf:'Katalog, Stand {d} · rev {r}'},
+fr:{depLabel:'Départs',dep:'Quelle cuisine aujourd’hui ?',colDest:'Destination',colClass:'Classe',newTag:'Nouveau',tiers:{basic:'Standard',extended:'Deluxe',signature:'Signature',prestige:'Prestige'},knoll:'Chaque chose à sa place.',prod:'Produits',decor:'Déco',show:'Afficher',pass:'Carte d’embarquement',collection:'Collection',valid:'Valable',includes:'Comprend',boardAria:'Tableau des départs des cuisines. Choisissez-en une pour voir son entrée.',asOf:'Catalogue au {d} · rev {r}'},
+th:{depLabel:'ขาออก',dep:'วันนี้ไปครัวไหนดี',colDest:'ปลายทาง',colClass:'ชั้น',newTag:'ใหม่',tiers:{basic:'มาตรฐาน',extended:'ดีลักซ์',signature:'ซิกเนเจอร์',prestige:'เพรสทีจ'},knoll:'ทุกอย่างอยู่ในที่ของมัน',prod:'สินค้า',decor:'ของตกแต่ง',show:'แสดง',pass:'บัตรขึ้นเครื่อง',collection:'คอลเลกชัน',valid:'ใช้ได้',includes:'รวม',boardAria:'กระดานขาออกของครัว เลือกหนึ่งครัวเพื่อดูหน้าจอเข้าบ้าน',asOf:'แคตตาล็อก ณ {d} · rev {r}'},
+ru:{depLabel:'Вылет',dep:'На какую кухню сегодня?',colDest:'Направление',colClass:'Класс',newTag:'Новое',tiers:{basic:'Стандарт',extended:'Делюкс',signature:'Фирменный',prestige:'Престиж'},knoll:'Всё на своих местах.',prod:'Товары',decor:'Декор',show:'Показать',pass:'Посадочный талон',collection:'Коллекция',valid:'Действует',includes:'Включает',boardAria:'Табло вылетов кухонь. Выберите кухню, чтобы посмотреть вход.',asOf:'Каталог на {d} · rev {r}'},
+mn:{depLabel:'Нислэг',dep:'Өнөөдөр аль гал тогоо руу?',colDest:'Чиглэл',colClass:'Ангилал',newTag:'Шинэ',tiers:{basic:'Стандарт',extended:'Делюкс',signature:'Онцгой',prestige:'Престиж'},knoll:'Бүгд байрандаа.',prod:'Бараа',decor:'Чимэглэл',show:'Харах',pass:'Онгоцны тасалбар',collection:'Цуглуулга',valid:'Хүчинтэй',includes:'Багтсан',boardAria:'Гал тогоонуудын нислэгийн самбар. Нэгийг сонгоод орох дүрсийг үзээрэй.',asOf:'{d}-ны каталог · rev {r}'},
+vi:{depLabel:'Khởi hành',dep:'Hôm nay đến căn bếp nào?',colDest:'Điểm đến',colClass:'Hạng',newTag:'Mới',tiers:{basic:'Tiêu chuẩn',extended:'Cao cấp',signature:'Đặc trưng',prestige:'Thượng hạng'},knoll:'Mỗi thứ một chỗ.',prod:'Sản phẩm',decor:'Đồ trang trí',show:'Hiển thị',pass:'Thẻ lên máy bay',collection:'Bộ sưu tập',valid:'Hiệu lực',includes:'Bao gồm',boardAria:'Bảng khởi hành các căn bếp. Chọn một bếp để xem màn hình vào cửa.',asOf:'Danh mục tính đến {d} · rev {r}'}
+};
+var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+var S=null, lang=(window.PT_I18N&&window.PT_I18N.lang)||'en', sel=-1, cat='products', depSeen=false, depOn=false, timers=[];
+var $=function(q,r){return (r||document).querySelector(q)};
+var u=function(k){return (UI[lang]||UI.en)[k]};
+var txt=function(o){return o?(o[lang]||o.en||''):''};
+var esc=function(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
+var seg=(window.Intl&&Intl.Segmenter)?new Intl.Segmenter(undefined,{granularity:'grapheme'}):null;
+var graphemes=function(s){return seg?Array.from(seg.segment(s),function(x){return x.segment}):Array.from(s)};
+var POOL={ko:'가나다라마바사아자차카타파하고노도로모보소오조호',ja:'アイウエオカキクケコサシスセソタチツテトナニハヒフヘホマミムメモラリルレロ',th:'กขคงจฉชซดตถทธนบปผพฟมยรลวสหอ',cy:'АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЭЮЯ',la:'ABCDEFGHIJKLMNOPQRSTUVWXYZ'};
+function pool(ch){ if(/\s/.test(ch)) return null; if(/[가-힣]/.test(ch)) return POOL.ko; if(/[぀-ヿ一-鿿]/.test(ch)) return POOL.ja; if(/[฀-๿]/.test(ch)) return POOL.th; if(/[Ѐ-ӿ]/.test(ch)) return POOL.cy; if(/[A-Za-zÀ-ỹ]/.test(ch)) return POOL.la; return null }
+var wide=function(ch){return /[가-힣぀-ヿ一-鿿＀-￯]/.test(ch)};
+var upper=function(s){return /^(ko|ja|th)$/.test(lang)?s:s.toLocaleUpperCase(lang)};
+function tile(g){ return '<span class="t'+(g===' '?' sp':wide(g)?' w':'')+'" data-g="'+esc(g)+'">'+(g===' '?'':esc(g))+'</span>' }
+/* words stay together when a long destination wraps; Japanese and Thai have no spaces, so they wrap per tile */
+function tiles(el,text){ el.innerHTML=/^(ja|th)$/.test(lang)?graphemes(text).map(tile).join(''):text.split(' ').map(function(w){ return '<span class="wd">'+graphemes(w).map(tile).join('')+'</span>' }).join(tile(' ')) }
+function clearTimers(){ timers.forEach(clearTimeout); timers=[] }
+function flip(el,delay){
+  [].forEach.call(el.querySelectorAll('.t'),function(t,i){
+    var g=t.dataset.g, p=pool(g); if(!p) return;
+    var steps=4+(i%4)+((Math.random()*4)|0), k=0;
+    var tick=function(){ k++; var last=k>=steps; t.textContent=last?g:p[(Math.random()*p.length)|0];
+      if(t.animate) t.animate([{transform:'rotateX(0deg)'},{transform:'rotateX(-75deg)'},{transform:'rotateX(0deg)'}],{duration:80});
+      if(!last) timers.push(setTimeout(tick,52)) };
+    timers.push(setTimeout(tick,delay+i*16));
+  });
+}
+function flipRow(li,delay){ flip($('.dest',li),delay); flip($('.cls',li),delay+120) }
+function board(animate){
+  var ul=$('#board-rows'); ul.innerHTML='';
+  S.kitchens.forEach(function(k,i){
+    var li=document.createElement('li'), b=document.createElement('button');
+    b.type='button'; b.className='row'; b.setAttribute('aria-pressed',String(i===sel));
+    b.setAttribute('aria-label',txt(k.title)+', '+u('tiers')[k.tier]+(k.new?', '+u('newTag'):''));
+    b.innerHTML='<span class="cells dest" aria-hidden="true"></span><span class="cells cls" aria-hidden="true"></span><span class="flag" aria-hidden="true">'+(k.new?esc(u('newTag')):'')+'</span>';
+    tiles($('.dest',b),upper(txt(k.title))); tiles($('.cls',b),upper(u('tiers')[k.tier]));
+    var pick=function(){ select(i) };
+    b.addEventListener('click',pick); b.addEventListener('focus',pick);
+    b.addEventListener('mouseenter',function(){ if(matchMedia('(hover:hover)').matches) pick() });
+    li.appendChild(b); ul.appendChild(li);
+  });
+  if(animate&&!reduce){ clearTimers(); [].forEach.call(ul.children,function(li,i){ flipRow(li,i*110) }) }
+}
+function select(i){
+  if(i===sel&&$('.gate-title').textContent) return;
+  sel=i; var k=S.kitchens[i], img=$('.gate-img'), vid=$('.gate-vid');
+  [].forEach.call(document.querySelectorAll('#board-rows .row'),function(b,j){ b.setAttribute('aria-pressed',String(j===i)) });
+  $('.gate-title').textContent=txt(k.title); $('.gate-sub').textContent=txt(k.subtitle);
+  if(k.video){
+    img.className='gate-img'+(reduce?'':' off'); img.src=k.poster; img.alt=txt(k.title);
+    if(reduce){ vid.className='gate-vid off'; vid.removeAttribute('src'); return }
+    vid.className='gate-vid'; vid.poster=k.poster;
+    if(vid.getAttribute('src')!==k.video){ vid.src=k.video; }
+    vid.muted=true; if(depOn){ var pr=vid.play(); if(pr&&pr.catch) pr.catch(function(){}) }
+  } else {
+    vid.className='gate-vid off'; vid.pause(); vid.removeAttribute('src'); vid.load();
+    img.className='gate-img contain'; img.src=k.preview.src; img.alt=txt(k.title);
+  }
+}
+function knoll(drop){
+  var g=$('#knoll-grid'), list=S[cat];
+  g.innerHTML=list.map(function(it,i){ var r=((i*37)%7-3)*0.6;
+    return '<li style="--i:'+i+';--r:'+r.toFixed(1)+'deg"><button type="button" class="it" aria-label="'+esc(txt(it.title)+(it.new?', '+u('newTag'):''))+'"><img src="'+it.image+'" alt="" width="'+it.w+'" height="'+it.h+'" loading="lazy" decoding="async"><span class="lab" aria-hidden="true">'+esc(txt(it.title))+(it.new?'<i>'+esc(u('newTag'))+'</i>':'')+'</span></button></li>' }).join('');
+  if(drop&&!reduce){ g.classList.remove('settle'); void g.offsetWidth; g.classList.add('settle') }
+}
+function pass(){
+  var p=S.package, a=new Date(p.startsOn+'T00:00:00'), b=new Date(p.endsOn+'T00:00:00'), f;
+  try{ f=new Intl.DateTimeFormat(lang,{year:'numeric',month:'short',day:'numeric'}) }catch(e){ f=new Intl.DateTimeFormat('en',{year:'numeric',month:'short',day:'numeric'}) }
+  $('.pass-title').textContent=txt(p.title); $('.pass-desc').textContent=txt(p.description);
+  $('.pass-dates').textContent=f.formatRange?f.formatRange(a,b):f.format(a)+' – '+f.format(b);
+  $('.pass-count').textContent=String(p.items.length);
+  $('.pass-items').innerHTML=p.items.map(function(it){ return '<li class="'+(it.kind==='kitchen'?'k':'')+'"><img src="'+it.image+'" alt="'+esc(txt(it.title))+'" title="'+esc(txt(it.title))+'" width="58" height="58" loading="lazy"></li>' }).join('');
+  var img=$('.pass-img'); img.src=p.image;
+  $('.pass-code').textContent=p.id.toUpperCase();
+  var md=function(d){return d.slice(5).replace('-','.')}; $('.pass-short').textContent=md(p.startsOn)+' → '+md(p.endsOn);
+}
+function labels(){
+  [].forEach.call(document.querySelectorAll('[data-c]'),function(el){ el.textContent=u(el.dataset.c) });
+  [].forEach.call(document.querySelectorAll('[data-c-aria]'),function(el){ el.setAttribute('aria-label',u(el.dataset.cAria)) });
+  var d=new Date(S.asOf.date+'T00:00:00'), f; try{ f=new Intl.DateTimeFormat(lang,{year:'numeric',month:'long',day:'numeric'}) }catch(e){ f=new Intl.DateTimeFormat('en',{dateStyle:'long'}) }
+  $('#asof').textContent=u('asOf').replace('{d}',f.format(d)).replace('{r}',S.asOf.revisionNumber);
+}
+function render(relang){
+  labels(); board(relang&&depOn); knoll(false); pass();
+  var keep=sel; sel=-1; select(keep>=0?keep:Math.max(0,S.kitchens.findIndex(function(k){return k.id==='hanok'})));
+}
+document.querySelector('.tabs').addEventListener('click',function(e){ var b=e.target.closest('button'); if(!b||!S) return; cat=b.dataset.cat;
+  [].forEach.call(this.querySelectorAll('button'),function(x){ x.setAttribute('aria-pressed',String(x===b)) }); knoll(true) });
+fetch('assets/catalog/snapshot.json').then(function(r){return r.json()}).then(function(s){
+  S=s; render(false);
+  if(!('IntersectionObserver' in window)) return;
+  new IntersectionObserver(function(es){ es.forEach(function(e){
+    depOn=e.isIntersecting; var v=$('.gate-vid');
+    if(depOn){ if(!depSeen){ depSeen=true; if(!reduce){ clearTimers(); [].forEach.call($('#board-rows').children,function(li,i){ flipRow(li,i*110) }) } }
+      if(v.getAttribute('src')&&!reduce){ var pr=v.play(); if(pr&&pr.catch) pr.catch(function(){}) } }
+    else v.pause();
+  }) },{threshold:.25}).observe($('#departures'));
+  var kseen=false; new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting&&!kseen){ kseen=true; knoll(true) } }) },{threshold:.2}).observe($('#knolling'));
+  if(!reduce) setInterval(function(){ if(!depOn||document.hidden) return; var rows=$('#board-rows').children; var i=(Math.random()*rows.length)|0; flipRow(rows[i],0) },4800);
+}).catch(function(e){ console.warn('catalog snapshot unavailable',e) });
+document.addEventListener('pt-lang',function(e){ lang=e.detail; if(S) render(true) });
+})();
+</script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+window.__ptBoot = true;
+
+const root = document.documentElement;
+const Q = new URLSearchParams(location.search);
+const CAPTURE = Q.get('still');            // dev hook: renders one section's composed frame (used to make the static fallbacks)
+const goStatic = () => { root.classList.remove('live'); root.classList.add('static'); };
+if (root.classList.contains('live')) main().catch(e => { console.error(e); goStatic(); });
+
+/* ---------- small math ---------- */
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a)); return t * t * (3 - 2 * t); };
+const lerp = (a, b, t) => a + (b - a) * t;
+const backOut = t => { const c = 1.7; return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); };
+const V = (x, y, z) => new THREE.Vector3(x, y, z);
+
+const NOISE = `
+float h31(vec3 p){ p = fract(p * .3183099 + .1); p *= 17.; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
+float vnoise(vec3 x){ vec3 i = floor(x), f = fract(x); f = f * f * (3. - 2. * f);
+  return mix(mix(mix(h31(i), h31(i + vec3(1,0,0)), f.x), mix(h31(i + vec3(0,1,0)), h31(i + vec3(1,1,0)), f.x), f.y),
+             mix(mix(h31(i + vec3(0,0,1)), h31(i + vec3(1,0,1)), f.x), mix(h31(i + vec3(0,1,1)), h31(i + vec3(1,1,1)), f.x), f.y), f.z); }
+float vn2(vec2 p){ return vnoise(vec3(p, .5)); }
+float dn(vec2 uv){ vec2 q = (uv - vec2(.49, .47)) * vec2(1.587, 1.); return .7 * length(q) + .28 * vn2(uv * vec2(8., 5.)) + .1 * vn2(uv * 29.); }
+`;
+
+/* Product materials get one shared patch: wilt (sag + bulge), colour loss with brown spots, and a noise dissolve. All driven by per-item uniforms. */
+function patch(mat, u) {
+  mat.onBeforeCompile = sh => {
+    Object.assign(sh.uniforms, u);
+    sh.vertexShader = sh.vertexShader
+      .replace('#include <common>', '#include <common>\nuniform float uDecay, uSag, uHgt; uniform vec3 uBase; varying vec3 vRel;')
+      .replace('#include <begin_vertex>', `
+        vec4 wp0 = modelMatrix * vec4(position, 1.);
+        vec3 rel = wp0.xyz - uBase;
+        vRel = rel / uHgt;
+        float hh = clamp(rel.y / uHgt, 0., 1.);
+        float kk = uDecay * uSag;
+        rel.y *= 1. - .26 * kk;
+        rel.xz *= 1. + .16 * kk * sin(hh * 3.14159);
+        rel.x += .1 * kk * hh * hh * uHgt;
+        vec3 transformed = (inverse(modelMatrix) * vec4(uBase + rel, 1.)).xyz;`);
+    sh.fragmentShader = sh.fragmentShader
+      .replace('#include <common>', '#include <common>\nuniform float uDecay, uFade, uSeed; uniform vec3 uGlow; varying vec3 vRel;\n' + NOISE)
+      .replace('#include <color_fragment>', `#include <color_fragment>
+        float lum = dot(diffuseColor.rgb, vec3(.299, .587, .114));
+        vec3 aged = vec3(lum) * vec3(1., .9, .74);
+        aged = mix(aged, aged * vec3(.4, .33, .24), smoothstep(.5, .8, vnoise(vRel * 7. + uSeed)));
+        diffuseColor.rgb = mix(diffuseColor.rgb, aged * .7, uDecay);
+        float dz = vnoise(vRel * 11. + uSeed * 1.7) * .7 + vnoise(vRel * 30. + uSeed) * .3;
+        float cutv = uFade * 1.12 - .06;
+        if (uFade > .001 && dz < cutv) discard;
+        float rim = uFade > .001 ? 1. - smoothstep(0., .08, dz - cutv) : 0.;`)
+      .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n totalEmissiveRadiance += uGlow * rim;');
+  };
+  mat.customProgramCacheKey = () => 'pt-item';
+  return mat;
+}
+
+async function main() {
+  const canvas = document.getElementById('gl');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+  const DPR = Math.min(devicePixelRatio || 1, 1.75);
+  renderer.setPixelRatio(DPR);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.autoClear = false;
+  const env = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+
+  const loader = new GLTFLoader();
+  const NAMES = ['carton_milk_1000', 'tray_tofu_block', 'cabbage', 'eggTray_egg_12', 'bottle_classic', 'jar_classic', 'apple', 'lemon', 'carrot', 'tomato', 'cucumber', 'can_classic', 'grape', 'onion'];
+  const P = {};
+  const texL = new THREE.TextureLoader();
+  const [photo, mask, maskImg, studio] = await Promise.all([
+    texL.loadAsync('assets/apple-photo.jpg'),
+    texL.loadAsync('assets/apple-mask.png'),
+    new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = 'assets/apple-mask.png'; }),
+    loader.loadAsync('assets/kitchen-studio.glb'),
+    ...NAMES.map(n => loader.loadAsync(`assets/products/${n}.glb`).then(g => { P[n] = g.scene; }))
+  ]);
+  photo.colorSpace = THREE.SRGBColorSpace;
+
+  /* ---------- builders ---------- */
+  function item(name, scale = 1) {
+    const g = new THREE.Group();
+    const m = P[name].clone(true);
+    m.position.y = 0.28;                                   // every Pantrip product's bottom sits at y = -0.28
+    const u = { uDecay: { value: 0 }, uSag: { value: 0 }, uFade: { value: 0 }, uSeed: { value: Math.random() * 20 },
+      uHgt: { value: 0.56 * scale }, uBase: { value: new THREE.Vector3() }, uGlow: { value: new THREE.Color(0, 0, 0) } };
+    m.traverse(o => { if (o.isMesh) { o.material = patch(o.material.clone(), u); o.material.envMapIntensity = 0.55; o.castShadow = o.receiveShadow = true; } });
+    g.add(m); g.scale.setScalar(scale);
+    g.userData = { u, mesh: m, base: new THREE.Vector3() };
+    return g;
+  }
+  const syncItem = g => { g.getWorldPosition(g.userData.u.uBase.value); };
+  const setShadow = (g, on) => g.userData.mesh.traverse(o => { if (o.isMesh) o.castShadow = on; });
+
+  const SHELVES = [0.72, 1.42, 2.08], FW = 1.9, FH = 2.7, FD = 1.2, FT = 0.12;
+  const SH = 1.42 + 0.011;                                  // top of the middle shelf
+  function fridge(scene, { floor: withFloor = true, door: doorAngle = 1.9 } = {}) {
+    const g = new THREE.Group();
+    const inner = new THREE.MeshStandardMaterial({ color: 0xefede6, roughness: 0.4, side: THREE.BackSide, envMapIntensity: 0.35 });
+    const shell = new THREE.Mesh(new THREE.BoxGeometry(FW, FH, FD), inner);   // back-faces only: an open-front box
+    shell.position.y = FH / 2; shell.receiveShadow = true; g.add(shell);
+    const body = new THREE.MeshStandardMaterial({ color: 0xe6e3d9, roughness: 0.5, envMapIntensity: 0.35 });
+    for (const [w, h, x, y] of [[FW + 2 * FT, FT, 0, FH + FT / 2], [FW + 2 * FT, FT, 0, -FT / 2], [FT, FH + 2 * FT, -(FW + FT) / 2, FH / 2], [FT, FH + 2 * FT, (FW + FT) / 2, FH / 2]]) {
+      const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, FT * 1.6), body); b.position.set(x, y, FD / 2 + FT * 0.5); b.castShadow = b.receiveShadow = true; g.add(b);
+    }
+    const glass = new THREE.MeshStandardMaterial({ color: 0xdcecea, roughness: 0.08, transparent: true, opacity: 0.32, depthWrite: false, envMapIntensity: 0.6 });
+    const trim = new THREE.MeshStandardMaterial({ color: 0xd2d5d0, roughness: 0.25, metalness: 0.6, envMapIntensity: 0.5 });
+    for (const y of SHELVES) {
+      const s = new THREE.Mesh(new THREE.BoxGeometry(FW - 0.01, 0.022, FD - 0.05), glass); s.position.set(0, y, -0.02); s.receiveShadow = true; g.add(s);
+      const t = new THREE.Mesh(new THREE.BoxGeometry(FW - 0.01, 0.045, 0.03), trim); t.position.set(0, y, FD / 2 - 0.06); g.add(t);
+    }
+    const drawer = new THREE.Mesh(new THREE.BoxGeometry(FW - 0.08, 0.5, 0.03), glass); drawer.position.set(0, 0.3, FD / 2 - 0.1); g.add(drawer);
+    const ledM = new THREE.MeshBasicMaterial({ color: 0xfff3e2 }); ledM.toneMapped = false;
+    const led = new THREE.Mesh(new THREE.BoxGeometry(FW * 0.55, 0.018, 0.05), ledM); led.position.set(0, FH - 0.012, FD / 2 - 0.25); g.add(led);
+    // open door, hinged on the right
+    const door = new THREE.Group(); door.position.set(FW / 2 + FT, 0, FD / 2 + FT * 1.3); door.rotation.y = doorAngle;
+    const slab = new THREE.Mesh(new THREE.BoxGeometry(FW + 2 * FT, FH + 2 * FT, 0.14), body); slab.position.set(-(FW / 2 + FT), FH / 2, 0.07); slab.castShadow = slab.receiveShadow = true; door.add(slab);
+    for (const y of [0.55, 1.35, 2.1]) { const bin = new THREE.Mesh(new THREE.BoxGeometry(FW * 0.86, 0.16, 0.16), glass); bin.position.set(-(FW / 2 + FT), y, -0.09); door.add(bin); }
+    g.add(door);
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.MeshStandardMaterial({ color: 0x1c1d1a, roughness: 0.7, envMapIntensity: 0.15 }));
+    floor.rotation.x = -Math.PI / 2; floor.position.y = -FT; floor.receiveShadow = true; if (withFloor) g.add(floor);
+    const spot = new THREE.SpotLight(0xfff1de, 15, 7, 1.15, 0.85, 1.4);
+    spot.position.set(0, FH - 0.08, FD / 2 - 0.1); spot.target.position.set(0, 0.5, -0.35);
+    spot.castShadow = true; spot.shadow.mapSize.set(1024, 1024); spot.shadow.bias = -0.0004; spot.shadow.normalBias = 0.01;
+    spot.shadow.camera.near = 0.2; spot.shadow.camera.far = 5;
+    const fill = new THREE.PointLight(0xfff1de, 2.4, 6, 1.6); fill.position.set(0, FH * 0.55, FD / 2 + 0.7);
+    g.add(spot, spot.target, fill);
+    scene.add(g);
+    return { g, spot, fill, ledM };
+  }
+
+  function dust(n, w, h, d) {
+    const geo = new THREE.BufferGeometry(), pos = new Float32Array(n * 3), sd = new Float32Array(n);
+    for (let i = 0; i < n; i++) { pos[i * 3] = (Math.random() - 0.5) * w; pos[i * 3 + 1] = Math.random() * h; pos[i * 3 + 2] = (Math.random() - 0.5) * d; sd[i] = Math.random(); }
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('seed', new THREE.BufferAttribute(sd, 1));
+    const mat = new THREE.ShaderMaterial({
+      uniforms: { uTime: { value: 0 }, uLevel: { value: 1 }, uPx: { value: DPR } },
+      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+      vertexShader: `attribute float seed; uniform float uTime, uPx; varying float vS;
+        void main(){ vec3 p = position; float t = uTime * (.06 + seed * .08);
+          p.x += sin(t * 3. + seed * 40.) * .07; p.y = mod(p.y - t * .22, ${h.toFixed(2)}); p.z += cos(t * 2. + seed * 17.) * .06;
+          vec4 mv = modelViewMatrix * vec4(p, 1.); vS = seed;
+          gl_PointSize = uPx * (2. + seed * 3.5) * (2.2 / -mv.z); gl_Position = projectionMatrix * mv; }`,
+      fragmentShader: `uniform float uLevel; varying float vS;
+        void main(){ float d = length(gl_PointCoord - .5); if (d > .5) discard;
+          gl_FragColor = vec4(vec3(1., .95, .88) * uLevel * (.18 + vS * .3) * (1. - d * 2.), 1.); }`
+    });
+    return new THREE.Points(geo, mat);
+  }
+
+  const aspectOf = r => r.w / Math.max(1, r.h);
+
+  /* ================= S1 — forgotten at the back of the fridge ================= */
+  const S1 = (() => {
+    const scene = new THREE.Scene(); scene.background = new THREE.Color(0x07080a); scene.environment = env;
+    scene.fog = new THREE.Fog(0x07080a, 10, 24);
+    // Pantrip's default kitchen "Studio weekends", at night: only a bedside lamp and the city in the window
+    const room = studio.scene; room.scale.setScalar(0.89);
+    room.traverse(o => { if (!o.isMesh) return; o.receiveShadow = true; o.castShadow = true;
+      (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { m.envMapIntensity = 0.035; if (m.name === '__unlit__59') m.color.setScalar(0.62); if (m.name === '__unlit__57') m.color.multiplyScalar(0.8); }); });
+    scene.add(room);
+    scene.add(new THREE.AmbientLight(0x27304a, 0.22));
+    const lamp = new THREE.PointLight(0xffa860, 4.5, 6, 1.5); lamp.position.set(-5.2, 1.3, 1.1); scene.add(lamp);
+    const city = new THREE.PointLight(0x7092e0, 1.6, 4.5, 1.5); city.position.set(4.3, 2.7, -0.3); scene.add(city);
+    // the open fridge is the key light
+    const rig = new THREE.Group(); rig.position.y = 0.12; scene.add(rig);
+    const f = fridge(rig, { floor: false, door: 1.62 });
+    const spill = new THREE.SpotLight(0xe8f0ff, 26, 10, 1.05, 0.85, 1.4);
+    spill.position.set(0, 1.7, 0.75); spill.target.position.set(0.4, -0.12, 3.6);
+    spill.castShadow = true; spill.shadow.mapSize.set(1024, 1024); spill.shadow.bias = -0.0005; spill.shadow.camera.near = 0.3; spill.shadow.camera.far = 9;
+    rig.add(spill, spill.target);
+    const cam = new THREE.PerspectiveCamera(34, 1, 0.05, 60);
+    const dustP = dust(260, FW - 0.1, FH - 0.1, FD - 0.1); dustP.position.set(0, 0.05, 0); rig.add(dustP);
+    const add = (name, x, z, ry, y = SH, s = 1) => { const g = item(name, s); g.position.set(x, y, z); g.rotation.y = ry; rig.add(g); g.userData.p0 = g.position.clone(); return g; };
+    // back row: what gets forgotten
+    const back = [
+      Object.assign(add('cabbage', -0.52, -0.34, 0.6), { rate: 1, sag: 1, lean: 0 }),
+      Object.assign(add('tray_tofu_block', -0.06, -0.42, 0.25), { rate: 0.9, sag: 0.5, lean: 0 }),
+      Object.assign(add('carton_milk_1000', 0.34, -0.42, -0.4), { rate: 0.85, sag: 0.35, lean: 0.09 }),
+    ];
+    // front row: used day by day
+    const front = [
+      Object.assign(add('bottle_classic', 0.7, 0.18, 0), { day: 1 }),
+      Object.assign(add('eggTray_egg_12', -0.42, 0.3, 0.1, SH, 0.9), { day: 3 }),
+      Object.assign(add('apple', 0.42, 0.36, 0.4), { day: 2 }),
+      Object.assign(add('tomato', -0.08, 0.42, 0), { day: 4 }),
+      Object.assign(add('jar_classic', 0.12, 0.12, 0.3), { day: 0 }),
+    ];
+    // the rest of the fridge
+    add('can_classic', -0.55, -0.15, 0.4, SHELVES[2] + 0.011); add('grape', 0.42, -0.1, 0.2, SHELVES[2] + 0.011); add('lemon', 0.0, 0.15, 0.7, SHELVES[2] + 0.011);
+    add('carrot', -0.35, 0.1, 0.25, SHELVES[0] + 0.011); add('cucumber', 0.3, -0.05, -0.3, SHELVES[0] + 0.011); add('onion', 0.62, 0.25, 0, SHELVES[0] + 0.011);
+    const DAYS = [0.17, 0.3, 0.43, 0.56, 0.69];
+    const DATES = [[9, 14], [9, 15], [9, 17], [9, 19], [9, 22], [9, 26], [10, 2]].map(([m, d]) => new Date(2026, m, d));
+    const I18N = window.PT_I18N;
+    const WARM = new THREE.Color(0xf2f6ff), COLD = new THREE.Color(0x9fb6d8);
+    rig.traverse(o => { if (o.isMesh) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { m.envMapIntensity *= 0.45; }); });
+    const stampEl = document.getElementById('stamp'); let lastStamp = '';
+    const tgt = V(0, 0, 0);
+    let exposure = 1;
+    function update(p, t, r) {
+      const wide = aspectOf(r) > 1.1;
+      // light: each day the door shuts (dip), and the fridge gets a little colder and dimmer
+      let dip = 0; for (const c of DAYS) dip = Math.max(dip, 1 - smooth(0, 0.035, Math.abs(p - c)));
+      const base = 1 - 0.8 * smooth(0.12, 0.9, p);
+      const tired = p > 0.86 && p < 0.97 && Math.sin(t * 31) * Math.sin(t * 17.3) > 0.7 ? 0.55 : 1;
+      const level = base * (1 - 0.92 * dip) * tired;
+      exposure = 1 - 0.25 * smooth(0.6, 1, p);
+      f.spot.intensity = 15 * level; f.fill.intensity = 3 * level; spill.intensity = 26 * level;
+      f.spot.color.lerpColors(WARM, COLD, smooth(0.15, 0.9, p)); f.fill.color.copy(f.spot.color); spill.color.copy(f.spot.color);
+      lamp.intensity = 4.5 * (1 - 0.35 * smooth(0.5, 1, p));
+      f.ledM.color.copy(f.spot.color).multiplyScalar(0.25 + 0.75 * level);
+      dustP.material.uniforms.uTime.value = t; dustP.material.uniforms.uLevel.value = level;
+      // camera: slow push toward the back row
+      const c = CAPTURE && Q.has('camp') ? +Q.get('camp') : smooth(0, 0.92, p);   // dev hook: wider camera for the static frame
+      const c0 = wide ? V(0.35, 2.6, 10.5) : V(0.15, 2.5, 10.2), t0 = wide ? V(0.4, 1.95, 0) : V(0.15, 1.45, 0);
+      const c1 = wide ? V(-0.32, 2.14, 2.75) : V(-0.08, 2.22, 4.6), t1 = wide ? V(-0.1, 1.68, -0.4) : V(-0.08, 1.68, -0.4);
+      cam.position.lerpVectors(c0, c1, c); tgt.lerpVectors(t0, t1, c);
+      cam.position.y += Math.sin(t * 0.5) * 0.008; cam.position.x += Math.sin(t * 0.31) * 0.01;
+      cam.fov = wide ? 34 : 44; cam.lookAt(tgt);
+      // front items: lifted out while the light is on
+      for (const g of front) {
+        const cd = DAYS[g.day], e = smooth(cd - 0.075, cd - 0.022, p);
+        g.position.set(g.userData.p0.x, g.userData.p0.y + e * 0.75, g.userData.p0.z + e * 1.5);
+        g.rotation.x = -e * 0.35; g.visible = e < 0.995;
+      }
+      // back items: colour drains, they sag, then quietly come apart
+      for (const g of back) {
+        const u = g.userData.u, d = smooth(0.18, 0.86, p) * g.rate, fade = smooth(0.86, 1, p) * 0.5;
+        u.uDecay.value = d; u.uSag.value = g.sag; u.uFade.value = fade; u.uGlow.value.setRGB(0.05, 0.06, 0.08);
+        g.position.y = g.userData.p0.y - fade * 0.06; g.rotation.z = g.lean * d;
+        setShadow(g, fade < 0.2); syncItem(g);
+      }
+      let di = 0; for (const c of DAYS) if (p > c) di++; if (p > 0.88) di++;
+      const ds = I18N.date(DATES[di]); if (ds !== lastStamp) { lastStamp = ds; stampEl.textContent = ds; }
+    }
+    return { scene, cam, update, get exposure() { return exposure; } };
+  })();
+
+  /* ================= S2 — one photo, done ================= */
+  const S2 = (() => {
+    const scene = new THREE.Scene(); scene.background = new THREE.Color(0x121311); scene.environment = env;
+    const f = fridge(scene); f.g.position.set(0, -5.4, -0.6);
+    const cam = new THREE.PerspectiveCamera(40, 1, 0.05, 60);
+    const lime = new THREE.Color(0xcddd95);
+    const uni = { uPhoto: { value: photo }, uMask: { value: mask }, uT: { value: 0 }, uFlash: { value: 0 }, uAlpha: { value: 1 }, uLime: { value: lime }, uSize: { value: 3.4 * DPR } };
+    const card = new THREE.Group(); scene.add(card);
+    const plane = new THREE.Mesh(new THREE.PlaneGeometry(1.587, 1), new THREE.ShaderMaterial({
+      uniforms: uni, transparent: true, depthWrite: false,
+      vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }`,
+      fragmentShader: `uniform sampler2D uPhoto, uMask; uniform float uT, uFlash, uAlpha; uniform vec3 uLime; varying vec2 vUv;
+        ${NOISE}
+        void main(){
+          vec3 c = texture2D(uPhoto, vUv).rgb;
+          float m = smoothstep(.35, .65, texture2D(uMask, vUv).r);
+          float r = 1.1 - dn(vUv);
+          float keep = step(uT, r);
+          float band = (uT > .001 && uT < .999) ? 1. - smoothstep(0., .018, abs(r - uT)) : 0.;
+          band *= 1. - m;
+          vec3 col = c * (1. + uFlash * 2.5) + uLime * band * 1.1;
+          gl_FragColor = vec4(col, max(max(m, keep), band) * uAlpha);
+          #include <colorspace_fragment>
+        }`
+    }));
+    card.add(plane);
+    // background pixels become drifting specks as the background is lifted away
+    const cv = document.createElement('canvas'); cv.width = maskImg.width; cv.height = maskImg.height;
+    const cx = cv.getContext('2d'); cx.drawImage(maskImg, 0, 0); const md = cx.getImageData(0, 0, cv.width, cv.height).data;
+    const pts = [], uvs = [], sds = [];
+    for (let y = 0; y < cv.height; y += 6) for (let x = 0; x < cv.width; x += 6) {
+      if (md[(y * cv.width + x) * 4] > 90) continue;
+      const u = (x + 0.5) / cv.width, v = 1 - (y + 0.5) / cv.height;
+      pts.push((u - 0.5) * 1.587, v - 0.5, 0.002); uvs.push(u, v); sds.push(Math.random(), Math.random(), Math.random());
+    }
+    const pg = new THREE.BufferGeometry();
+    pg.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3)); pg.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2)); pg.setAttribute('seed', new THREE.Float32BufferAttribute(sds, 3));
+    const specks = new THREE.Points(pg, new THREE.ShaderMaterial({
+      uniforms: uni, transparent: true, depthWrite: false,
+      vertexShader: `attribute vec3 seed; uniform float uT, uSize; uniform sampler2D uPhoto; varying vec3 vCol; varying float vA;
+        ${NOISE}
+        void main(){
+          float age = uT - (1.1 - dn(uv));
+          vec3 p = position; float a = 0.;
+          if (age > 0.) {
+            vec2 dir = normalize(p.xy + (seed.xy - .5) * .7 + 1e-4);
+            p.xy += dir * age * (.3 + seed.z * .55);
+            p.y += age * age * (.5 + seed.x * .8);
+            p.z += age * (seed.y - .25) * .9;
+            a = 1. - smoothstep(0., .32, age);
+          }
+          vCol = texture2D(uPhoto, uv).rgb; vA = a;
+          vec4 mv = modelViewMatrix * vec4(p, 1.);
+          gl_PointSize = uSize * (1. + age * 1.6) * (2. / -mv.z);
+          gl_Position = projectionMatrix * mv;
+        }`,
+      fragmentShader: `uniform vec3 uLime; varying vec3 vCol; varying float vA;
+        void main(){ float d = length(gl_PointCoord - .5); if (d > .5 || vA < .01) discard;
+          gl_FragColor = vec4(mix(vCol, uLime, .4), vA * (1. - d * 2.));
+          #include <colorspace_fragment>
+        }`
+    }));
+    card.add(specks);
+    // the shelf it lands on
+    const at = (x, z, y = SH) => V(x, y, z).add(f.g.position);
+    const shelfItems = [['carton_milk_1000', -0.62, -0.32, -0.3], ['tray_tofu_block', -0.25, -0.35, 0.2], ['jar_classic', 0.55, -0.3, 0.4], ['eggTray_egg_12', -0.5, 0.2, 0.1, 0.9], ['bottle_classic', 0.66, 0.22, 0]];
+    for (const [n, x, z, ry, s = 1] of shelfItems) { const g = item(n, s); g.position.copy(at(x, z)); g.rotation.y = ry; scene.add(g); }
+    const slot = at(0.12, 0.24);
+    const apples = [item('apple'), item('apple')];
+    apples[0].position.copy(slot).add(V(-0.13, 0, 0.02)); apples[1].position.copy(slot).add(V(0.16, 0, -0.04)); apples[1].rotation.y = 1.2;
+    apples.forEach(a => scene.add(a));
+    const ring = new THREE.Mesh(new THREE.RingGeometry(0.2, 0.218, 64), new THREE.MeshBasicMaterial({ color: lime, transparent: true, depthWrite: false }));
+    ring.rotation.x = -Math.PI / 2; ring.position.copy(slot).add(V(0, 0.004, 0)); scene.add(ring);
+    const tagAnchor = new THREE.Object3D(); tagAnchor.position.copy(slot).add(V(0, 0.42, 0)); scene.add(tagAnchor);
+    const stage = document.querySelector('#s2 .stage');
+    const vf = stage.querySelector('.vf'), focus = stage.querySelector('.vf-focus'), shutter = stage.querySelector('.shutter'), flash = stage.querySelector('.flash');
+    const tag = mkTag(stage.querySelector('.tags'));
+    const SHOT = 0.16;
+    const camA = V(), camB = V(), look = V(), tmp = V(), corners = [V(-0.7935, 0.5, 0), V(0.7935, 0.5, 0), V(-0.7935, -0.5, 0), V(0.7935, -0.5, 0)];
+    const bez = (a, b, c, t) => a.clone().multiplyScalar((1 - t) * (1 - t)).add(b.clone().multiplyScalar(2 * (1 - t) * t)).add(c.clone().multiplyScalar(t * t));
+    function update(p, t, r) {
+      const asp = aspectOf(r), fov = 40, tn = Math.tan(THREE.MathUtils.degToRad(fov / 2));
+      const dist = Math.max(1 / (2 * tn * 0.7), 1.587 / (2 * tn * asp * 0.86));
+      cam.fov = fov;
+      camA.set(Math.sin(t * 0.7) * 0.006 * (p < SHOT ? 1 : 0), Math.sin(t * 0.9) * 0.005 * (p < SHOT ? 1 : 0), dist);
+      camB.copy(slot).add(asp > 1 ? V(0.55, 0.9, 2.3) : V(0.12, 1.45, 4.9));
+      const m = smooth(0.48, 0.82, p);
+      cam.position.lerpVectors(camA, camB, m);
+      look.lerpVectors(V(0, 0, 0), tmp.copy(slot).add(V(0, 0.18, 0)), m); cam.lookAt(look);
+      // shot, then the background lifts away
+      const fl = Math.max(0, 1 - Math.abs(p - SHOT) / 0.022);
+      uni.uFlash.value = fl * 0.6; flash.style.opacity = (fl * 0.85).toFixed(3);
+      uni.uT.value = smooth(SHOT + 0.02, 0.5, p);
+      // fly to the shelf
+      const k = smooth(0.5, 0.8, p);
+      const end = tmp.copy(slot).add(V(0, 0.17, 0.04));
+      card.position.copy(bez(V(0, 0, 0), V(0.5, -1.0, 0.9), end, k));
+      card.scale.setScalar(lerp(1, 0.29, k));
+      if (k > 0) card.lookAt(cam.position); else card.rotation.set(0, 0, 0);
+      uni.uAlpha.value = 1 - smooth(0.78, 0.84, p);
+      card.visible = uni.uAlpha.value > 0.001;
+      const pop = clamp((p - 0.79) / 0.08);
+      apples.forEach((a, i) => { const s = pop > 0 ? backOut(clamp(pop * 1.2 - i * 0.2)) : 0; a.scale.setScalar(Math.max(0.0001, s)); a.visible = s > 0.001; });
+      const rr = clamp((p - 0.8) / 0.15);
+      ring.visible = rr > 0 && rr < 1; ring.scale.setScalar(0.6 + rr * 2.2); ring.material.opacity = 1 - rr;
+      // DOM: viewfinder follows the photo, shutter press, tag
+      const vfo = 1 - smooth(SHOT + 0.03, SHOT + 0.1, p);
+      vf.style.opacity = shutter.style.opacity = vfo.toFixed(3);
+      if (vfo > 0) {
+        let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+        plane.updateWorldMatrix(true, false);
+        for (const c of corners) { tmp.copy(c).applyMatrix4(plane.matrixWorld).project(cam); const x = (tmp.x * 0.5 + 0.5) * r.w, y = (-tmp.y * 0.5 + 0.5) * r.h; x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+        Object.assign(vf.style, { left: x0 + 'px', top: y0 + 'px', width: (x1 - x0) + 'px', height: (y1 - y0) + 'px' });
+        const lockK = smooth(0.02, SHOT - 0.03, p);
+        focus.style.transform = `scale(${lerp(1.35, 1, lockK).toFixed(3)})`; focus.classList.toggle('lock', lockK > 0.98);
+        shutter.style.transform = `scale(${(1 - 0.12 * Math.max(0, 1 - Math.abs(p - SHOT) / 0.02)).toFixed(3)})`;
+      }
+      tag.set(p > 0.83 ? window.PT_I18N.dday(7) : null, 'fresh', false, 7);
+      if (p > 0.83) tag.place(tagAnchor, cam, r);
+    }
+    return { scene, cam, update, exposure: 1 };
+  })();
+
+  /* ---------- tags ---------- */
+  function mkTag(layer) {
+    const el = document.createElement('span'); el.className = 'tag'; layer.appendChild(el);
+    let txt = '', st = '';
+    const v = new THREE.Vector3();
+    return {
+      el,
+      set(text, state, pulse = false, n = -1) {
+        el._n = n;
+        if (text === null) { el.style.visibility = 'hidden'; return; }
+        if (text !== txt) { txt = text; el.innerHTML = text === '✓' ? '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.6l3.1 3L13 4.6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>' : `<b>${text}</b>`; }
+        if (state !== st) { st = state; el.dataset.s = state; }
+        el.classList.toggle('pulse', pulse);
+        el.dataset.on = '1';
+      },
+      place(obj, cam, r, alpha = 1) {
+        if (el.style.visibility === 'hidden' && !el.dataset.on) return;
+        obj.getWorldPosition(v); v.project(cam);
+        const x = r.x + (v.x * 0.5 + 0.5) * r.w, y = r.y + (-v.y * 0.5 + 0.5) * r.h;
+        const inside = v.z < 1 && x > r.x + 8 && x < r.x + r.w - 8 && y > r.y + 64 && y < r.y + r.h;   // keep clear of the pane caption
+        el._x = x; el._y = y;
+        el.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px) translate(-50%,-100%) translateY(-6px)`;
+        el.style.visibility = inside && alpha > 0.02 ? 'visible' : 'hidden';
+        el.style.opacity = alpha.toFixed(3);
+        el.dataset.on = '';
+      }
+    };
+  }
+
+  /* ================= S3 — the same kitchen, in your hand ================= */
+  // six things, same order in the real fridge and in the Pantrip kitchen; exp = days left, use = the day it gets eaten
+  const SIX = [
+    { n: 'tray_tofu_block', exp: 2, use: 1 }, { n: 'apple', exp: 7, use: 5 }, { n: 'carrot', exp: 4, use: 3, ry: 0.5 },
+    { n: 'carton_milk_1000', exp: 3, use: 2 }, { n: 'cabbage', exp: 5, use: 4 }, { n: 'eggTray_egg_12', exp: 9, use: 6, s: 0.78 },
+  ];
+  const S3a = (() => {
+    const scene = new THREE.Scene(); scene.background = new THREE.Color(0x121311); scene.environment = env;
+    fridge(scene);
+    const cam = new THREE.PerspectiveCamera(34, 1, 0.05, 60);
+    const xs = [-0.55, 0, 0.55];
+    const items = SIX.map((d, i) => { const g = item(d.n, d.s || 1); g.position.set(xs[i % 3], SH, i < 3 ? 0.24 : -0.3); g.rotation.y = d.ry || (i * 0.7) % 1.3 - 0.4; g.userData.p0 = g.position.clone(); scene.add(g); return g; });
+    add3('can_classic', -0.55, -0.15, SHELVES[2]); add3('lemon', 0.3, 0.1, SHELVES[2]); add3('onion', 0.4, 0.1, SHELVES[0]); add3('cucumber', -0.3, 0, SHELVES[0]);
+    function add3(n, x, z, y) { const g = item(n); g.position.set(x, y + 0.011, z); scene.add(g); }
+    const tgt = V();
+    function update(p, t, r, day) {
+      const asp = aspectOf(r);
+      cam.fov = asp > 0.9 ? 36 : 46;
+      cam.position.set(lerp(-0.35, 0.35, p), 2.15 + Math.sin(t * 0.4) * 0.01, asp > 0.9 ? 3.35 : 3.9); tgt.set(0, 1.45, -0.05); cam.lookAt(tgt);
+      items.forEach((g, i) => {
+        const e = smooth(SIX[i].use + 0.5, SIX[i].use + 0.9, day);
+        g.position.set(g.userData.p0.x, g.userData.p0.y + e * 0.8, g.userData.p0.z + e * 1.4); g.rotation.x = -e * 0.3; g.visible = e < 0.995;
+      });
+    }
+    return { scene, cam, update, exposure: 1 };
+  })();
+
+  const S3b = { ready: false, exposure: 1 };
+  const stage3 = document.querySelector('#s3 .stage');
+  const tags3 = SIX.map(() => mkTag(stage3.querySelector('.tags')));
+  loader.loadAsync('assets/kitchen-hanok.glb').then(gltf => {
+    const scene = new THREE.Scene(); scene.background = new THREE.Color(0xf2ede0); scene.environment = env;
+    gltf.scene.traverse(o => { if (o.isMesh) { o.castShadow = o.receiveShadow = true; (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { m.envMapIntensity = 0.3; }); } });
+    scene.add(gltf.scene);
+    // lights as declared by the pack (SceneKit units -> three.js physical units)
+    scene.add(new THREE.AmbientLight(0xd6e6ff, 0.22 * Math.PI));
+    const sun = new THREE.DirectionalLight(0xffedd4, 0.82 * Math.PI);
+    sun.target.position.set(1.2, 0.8, -2); sun.position.copy(sun.target.position).add(V(-0.21694, 0.86603, 0.45048).multiplyScalar(30));
+    sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.02;
+    Object.assign(sun.shadow.camera, { left: -7, right: 7, top: 7, bottom: -7, near: 1, far: 70 });
+    scene.add(sun, sun.target);
+    // fridge slot of the hanok pack: transform scale .72, translate (1.45, .34, -2.05); front-layer anchors
+    const T = V(1.45, 0.34, -2.05), S = 0.72;
+    const A = [[-0.465, 1.67, 0.38], [0, 1.67, 0.38], [0.465, 1.67, 0.38], [-0.465, 1.67, -0.42], [0, 1.67, -0.42], [0.465, 1.67, -0.42]];
+    const items = SIX.map((d, i) => {
+      const g = item(d.n, S * (d.s || 1));
+      g.position.set(T.x + A[i][0] * S, T.y + (A[i][1] - 0.28) * S + 0.52, T.z + A[i][2] * S);   // lid off, lifted to the jar's mouth so it reads from outside g.rotation.y = d.ry || 0.2;
+      g.userData.p0 = g.position.clone(); g.userData.u.uGlow.value.setRGB(1.2, 1.5, 0.7);
+      const a = new THREE.Object3D(); a.position.y = 0.56 * (d.n === 'eggTray_egg_12' ? 0.5 : d.n === 'tray_tofu_block' ? 0.45 : 1) + 0.1 + (i >= 3 ? 0.16 : 0); g.add(a); g.userData.anchor = a;   // back-row tags float higher so the rows don't collide
+      scene.add(g); return g;
+    });
+    const cam = new THREE.PerspectiveCamera(38, 1, 0.05, 400);
+    const J = V(1.45, 1.72, -2.05);
+    Object.assign(S3b, { scene, cam, items, J, ready: true });
+    stage3.dataset.ready = '';
+  }).catch(e => console.warn('kitchen failed to load; poster stays', e));
+
+  S3b.update = (p, t, r, day) => {
+    const asp = aspectOf(r);
+    // starts close on the jar (the hanok kitchen's fridge slot), then pulls back to the whole kitchen
+    const k = smooth(0.05, 0.95, p);
+    const az = lerp(0.45, 0.95, k) + Math.sin(t * 0.15) * 0.01, el = lerp(0.72, 0.6, k), rad = lerp(3.3, 5.8, k) * (asp > 0.9 ? 1 : 1.12);
+    const small = r.w < 520;
+    S3b.cam.fov = small ? 35 : asp > 0.9 ? 38 : 44;   // small phone pane: zoom in so the tags have room
+    S3b.cam.position.set(S3b.J.x + Math.sin(az) * Math.cos(el) * rad, S3b.J.y + Math.sin(el) * rad, S3b.J.z + Math.cos(az) * Math.cos(el) * rad);
+    S3b.cam.lookAt(S3b.J.x, S3b.J.y + (small ? 0.34 : 0), S3b.J.z);
+    S3b.items.forEach((g, i) => {
+      const d = SIX[i], u = g.userData.u;
+      const leave = smooth(d.use + 0.5, d.use + 0.95, day);
+      g.position.y = g.userData.p0.y + leave * 0.35; u.uFade.value = leave; g.visible = leave < 0.995;
+      setShadow(g, leave < 0.3); syncItem(g);
+    });
+  };
+  const tagState = n => n >= 5 ? 'fresh' : n >= 2 ? 'soon' : 'urgent';
+  function tags3Update(p, day, rb) {
+    if (!S3b.ready) { tags3.forEach(tg => tg.set(null)); return; }
+    S3b.items.forEach((g, i) => {
+      const d = SIX[i], tg = tags3[i];
+      const left = d.exp - Math.floor(day);
+      const done = day >= d.use + 0.45, gone = day >= d.use + 0.95;
+      if (gone) { tg.set(null); return; }
+      const remind = !done && day >= d.use;
+      tg.set(done ? '✓' : window.PT_I18N.dday(left), done ? 'done' : tagState(left), remind, done ? -1 : left);
+      tg.place(g.userData.anchor, S3b.cam, rb, 1 - smooth(d.use + 0.75, d.use + 0.95, day));
+    });
+  }
+
+  /* ---------- layout + loop ---------- */
+  const SECTIONS = ['s1', 's2', 's3'].map(id => ({ id, el: document.getElementById(id), stage: document.querySelector(`#${id} .stage`), p: 0 }));
+  if (CAPTURE) { const s = SECTIONS.find(s => s.id === CAPTURE); s.el.classList.add('cap-on'); s.p = +(Q.get('p') || 0.5); }
+  const panes = [...stage3.querySelectorAll('.pane')];
+  const l3 = stage3.querySelector('.l3');
+  function paneRects(w, h) {
+    const lb = l3.getBoundingClientRect().bottom - stage3.getBoundingClientRect().top;
+    const g = Math.max(16, Math.min(72, w * 0.05)), top = lb + 26, bot = h - (w > 760 ? 40 : 22), gap = 16;
+    if (w > 760) { const pw = (w - 2 * g - gap) / 2; return [{ x: g, y: top, w: pw, h: bot - top }, { x: g + pw + gap, y: top, w: pw, h: bot - top }]; }
+    const ph = (bot - top - gap) / 2; return [{ x: g, y: top, w: w - 2 * g, h: ph }, { x: g, y: top + ph + gap, w: w - 2 * g, h: ph }];
+  }
+  let cw = 0, ch = 0;
+  function draw(scene, cam, sr, r, exposure) {
+    const x = sr.left + r.x, y = sr.top + r.y, yy = ch - y - r.h;
+    renderer.setViewport(x, yy, r.w, r.h); renderer.setScissor(x, yy, r.w, r.h);
+    cam.aspect = r.w / r.h; cam.updateProjectionMatrix();
+    renderer.toneMappingExposure = exposure;
+    renderer.render(scene, cam);
+  }
+  document.querySelector('#s1 .stage').dataset.ready = '';
+  document.querySelector('#s2 .stage').dataset.ready = '';
+  let last = performance.now(), frames = 0;
+  function frame(now) {
+    requestAnimationFrame(frame);
+    if (document.hidden) return;
+    const dt = Math.min(0.1, (now - last) / 1000); last = now;
+    const t = now / 1000;
+    if (canvas.clientWidth !== cw || canvas.clientHeight !== ch) { cw = canvas.clientWidth; ch = canvas.clientHeight; renderer.setSize(cw, ch, false); }
+    const vh = innerHeight;
+    renderer.setScissorTest(false); renderer.setClearColor(0x131412, 1); renderer.clear(); renderer.setScissorTest(true);
+    for (const s of SECTIONS) {
+      const sr = s.stage.getBoundingClientRect();
+      if (sr.bottom <= 0 || sr.top >= ch || sr.height < 2) continue;
+      if (!CAPTURE) { const r = s.el.getBoundingClientRect(); const target = clamp(-r.top / Math.max(1, r.height - vh)); s.p += (target - s.p) * Math.min(1, dt * 7); }
+      const full = { x: 0, y: 0, w: sr.width, h: sr.height };
+      if (s.id === 's1') { S1.update(s.p, t, full); draw(S1.scene, S1.cam, sr, full, S1.exposure); }
+      else if (s.id === 's2') { S2.update(s.p, t, full); draw(S2.scene, S2.cam, sr, full, S2.exposure); }
+      else {
+        const [ra, rb] = paneRects(sr.width, sr.height);
+        panes.forEach((el, i) => { const r = i ? rb : ra; Object.assign(el.style, { left: r.x + 'px', top: r.y + 'px', width: r.w + 'px', height: r.h + 'px' }); });
+        const day = clamp((s.p - 0.06) / 0.88) * 6.98;
+        S3a.update(s.p, t, ra, day); draw(S3a.scene, S3a.cam, sr, ra, 1);
+        if (S3b.ready) { S3b.update(s.p, t, rb, day); draw(S3b.scene, S3b.cam, sr, rb, 1); }
+        tags3Update(s.p, day, rb);
+      }
+    }
+    if (CAPTURE && ++frames === 40) {
+      // dev hook: where the labels sit on this frame, as fractions of the stage, for the static fallback
+      const st = SECTIONS.find(s => s.id === CAPTURE).stage, r = st.getBoundingClientRect();
+      const tags = [...st.querySelectorAll('.tags .tag')].filter(t => t.style.visibility === 'visible' && t._n >= 0).map(t => [+(t._x / r.width).toFixed(4), +(t._y / r.height).toFixed(4), t._n, t.dataset.s]);
+      const panes = [...st.querySelectorAll('.pane')].map(el => [el.offsetLeft + 16, el.offsetTop + 16].map((v, i) => +(v / (i ? r.height : r.width)).toFixed(4)));
+      document.body.dataset.marks = JSON.stringify({ tags, panes });
+      root.dataset.captured = '1';
+    }
+  }
+  requestAnimationFrame(frame);
+}
+</script>
+</body>
+</html>
