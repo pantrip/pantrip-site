@@ -104,11 +104,11 @@ assert.equal(FT.ko.notesDates,'기한 알림은 식품의 안전성을 판단하
 assert.equal(FT.en.notesDates,'Dates are reminders, not food safety advice. Follow the product label and storage instructions.');
 console.log('PASS: document shell, verification, canonical, referrer, favicons, policy links, contact, Google sign-in in 10 languages');
 
-// Motion: reduced motion gets static frames and no autoplay.
+// Motion: reduced motion gets static frames; kitchen previews never load video.
 assert(html.includes("matchMedia('(prefers-reduced-motion: reduce)')"),'Reduced motion is read in script');
 assert(/@media \(prefers-reduced-motion:reduce\)/.test(html),'Reduced motion CSS');
 assert(html.includes('html.static .stage .still{opacity:1;visibility:visible;transition:none}'),'Static frames show immediately for reduced motion and no WebGL');
-assert(/<video class="gate-vid" muted playsinline loop preload="none"/.test(html) && !/<video[^>]*\sautoplay/.test(html),'Entrance video never autoplays from markup');
+assert(!/<video\b|gate-vid|\.play\(|\.pause\(/.test(html),'Kitchen previews have no video element or playback code');
 console.log('PASS: unique ids, image sizes, 10-language catalogs, reduced motion');
 
 // Assets: everything the markup and scripts reference exists, in the right format.
@@ -123,8 +123,31 @@ for(const n of names) refs.add(`assets/products/${n}.glb`);
 const snap=JSON.parse(readFileSync(file('assets/catalog/snapshot.json'),'utf8'));
 assert.equal(snap.asOf.revisionNumber,709,'Catalog snapshot revision');
 assert(snap.kitchens.length>=8 && snap.products.length && snap.decor.length && snap.package.items.length,'Catalog snapshot has kitchens, products, decor and the package');
-assert(snap.kitchens.some(k=>k.id==='hanok'&&k.video),'Default departure has an entrance video');
-for(const k of snap.kitchens) for(const p of [k.video,k.poster,k.preview?.src]) if(p) refs.add(p);
+assert(snap.kitchens.some(k=>k.id==='hanok'&&k.preview),'Default departure has a kitchen preview');
+for(const k of snap.kitchens) {
+ assert(k.preview?.src.endsWith('.webp')&&Number.isInteger(k.preview.w)&&k.preview.w>0&&Number.isInteger(k.preview.h)&&k.preview.h>0,`${k.id} has a kitchen preview with intrinsic dimensions`);
+ refs.add(k.preview.src);
+}
+// Run the actual selection code for every tier and language, including changing
+// language while the same kitchen remains selected (render resets sel to -1).
+const selectSource=html.slice(html.indexOf('function select(i){'),html.indexOf('function knoll(drop){'));
+for(const lang of LANGS) {
+ const img={},title={},subtitle={},rows=snap.kitchens.map(()=>({setAttribute(k,v){this[k]=v}}));
+ const context=vm.createContext({S:snap,sel:-1,document:{querySelectorAll:()=>rows},
+  $:q=>({'.gate-img':img,'.gate-title':title,'.gate-sub':subtitle}[q]),
+  txt:o=>o?.[lang]||o?.en||''});
+ vm.runInContext(selectSource,context);
+ for(const [i,k] of snap.kitchens.entries()) {
+  vm.runInContext(`sel=-1; select(${i})`,context);
+  assert.equal(img.src,k.preview.src,`${k.id} (${lang}) selects its kitchen rather than its entrance`);
+  assert.equal(img.width,k.preview.w);assert.equal(img.height,k.preview.h);
+  assert.equal(img.alt,k.title[lang]||k.title.en);
+  assert.equal(title.textContent,img.alt);assert.equal(subtitle.textContent,k.subtitle[lang]||k.subtitle.en);
+  assert.equal(rows.filter(row=>row['aria-pressed']==='true').length,1);
+  assert.equal(rows[i]['aria-pressed'],'true');
+ }
+}
+console.log('PASS: all kitchen previews, localized selection and intrinsic dimensions');
 for(const it of [...snap.products,...snap.decor,...snap.package.items]) refs.add(it.image);
 refs.add(snap.package.image);
 for(const url of refs) assert(existsSync(file(url)),`Missing asset ${url}`);
@@ -138,4 +161,4 @@ for(const glb of [...refs].filter(u=>u.endsWith('.glb'))) {
  const buf=readFileSync(file(glb)),json=JSON.parse(buf.subarray(20,20+buf.readUInt32LE(12)).toString());
  for(const ext of json.extensionsRequired||[]) assert(['KHR_mesh_quantization','EXT_texture_webp','KHR_texture_transform'].includes(ext),`${glb} needs no extra decoder (${ext})`);
 }
-console.log(`PASS: ${refs.size} referenced assets exist (glTF/MP4/WebP signatures), catalog snapshot rev ${snap.asOf.revisionNumber}`);
+console.log(`PASS: ${refs.size} referenced assets exist (glTF/WebP signatures), catalog snapshot rev ${snap.asOf.revisionNumber}`);
