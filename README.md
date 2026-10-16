@@ -1,6 +1,6 @@
 # Pantrip 공개 안내 페이지
 
-공식 공개 사이트는 OpenAI / ChatGPT Sites의 `https://pantrip.app/`와 `https://www.pantrip.app/`입니다. `public/`의 소개 페이지·개인정보·이용약관·고객지원을 `node build-public.mjs`로 `out/`에 빌드합니다. 공개 Sites 설정은 `.openai/hosting.json`이며 `static.directory`는 `out`입니다. GitHub Pages는 `public/`을 배포하는 호환 미러이고, 공개 Sites 빌드는 관리자·API 문서를 제외합니다.
+공식 공개 사이트 `https://pantrip.app/`와 `https://www.pantrip.app/`는 Cloudflare Pages의 `pantrip-site` 프로젝트에서 제공합니다. `public/`의 소개 페이지·개인정보·이용약관·고객지원을 `node build-public.mjs`로 `out/`에 빌드하며 관리자·API 문서는 제외합니다. GitHub Pages는 `public/`을 배포하는 호환 미러입니다. `.openai/hosting.json`은 이전 Sites용 설정입니다.
 
 ## 냉장고 이야기 소개 페이지 (2026-10-15)
 
@@ -8,22 +8,24 @@
 
 - 3D: three.js 0.160.0을 import map으로 `cdn.jsdelivr.net/npm/three@0.160.0`에서 불러오고, 글꼴은 Google Fonts입니다. 앱의 실제 상품 GLB(`assets/products/`)와 한옥·원룸 주방 GLB(`assets/kitchen-hanok.glb`, `assets/kitchen-studio.glb`)는 quantize·WebP만 쓰므로 별도 디코더가 필요 없습니다. 호스트가 `.glb`를 그대로 제공해야 합니다.
 - WebGL이 없거나 동작 줄이기 설정이면 `assets/stills/`의 정지 장면과 HTML 라벨을 보여 주고 입장 영상을 자동 재생하지 않습니다. 정지 장면은 캡처용 파라미터(`?still=s1&p=0.72&camp=0.12`, `?still=s2&p=0.93`, `?still=s3&p=0.33`)로 1440×900과 390×844@2x를 렌더링해 만들었습니다.
+- 스크롤 안정성(2026-10-16): 캔버스·장면·스크롤 구간은 최초 small viewport 높이를 공유하고 주소창에 의한 높이 변화에는 재배치하지 않습니다. 가로 폭이 바뀌면 새 높이를 측정하고 해당 구간의 위치를 보존합니다. 로딩·WebGL 컨텍스트 실패 후에는 구간 높이를 유지한 채 정지 장면으로 전환합니다. 각 장면의 텍스처·셰이더·첫 실제 렌더를 포스터 뒤에서 순서대로 준비하며, 스크롤이 멈추면 추가 렌더링도 멈춥니다. 모바일은 해상도·그림자 크기를 낮추고 좁은 주방 패널의 D-day는 간결한 배지와 연결선으로 표시합니다(전체 번역은 aria-label/title 유지).
 - 언어: 10개(ko, en, ja, es, de, fr, th, ru, mn, vi). 브라우저 언어로 시작하고 오른쪽 위 선택은 이 기기에 저장합니다. 주방 이름·D-day 표기·등급명은 앱의 Localizable.xcstrings 용어를 씁니다. 카탈로그 항목 이름은 7개 언어이며 de/fr/vi는 영어로 표시합니다.
 - 카탈로그 스냅숏: `assets/catalog/snapshot.json`(rev 709, 2026-10-14, 공개 카탈로그 schema 1). 갱신할 때는 카탈로그를 다시 받아 같은 필드만 추출합니다. 출시·판매 중인 항목과 무료 기본 상품만 쓰고, 미리보기 PNG는 투명 WebP(120KB 이하), 입장 영상은 가로 540px·무음·8초 이하·1.2MB 이하로 다시 인코딩합니다. 서드파티 CC BY 모델이 든 신발 모음과 주방 팩(온천·사바나·사막·보카주)은 제외합니다. 스냅숏의 rev와 날짜는 하단 문구에 그대로 표시됩니다.
 - 출처: 원룸 창밖 야경 “Seoul-night-pano-cropped.jpg” by KLuwak(CC BY-SA 3.0), 사과 사진 USDA ARS(퍼블릭 도메인), 우주선 주방 일부 모델 “Rigged Astronaut” by J-Toastie(CC BY 3.0), 글꼴(SIL OFL), three.js(MIT). 하단 `출처`에 링크와 함께 표시합니다.
 - 유지 항목: 제목, google-site-verification, canonical, referrer no-referrer, 파비콘, 정책·지원 링크, 운영자·연락처, 접힌 Google 로그인 설명(ko/en은 기존 문구 그대로, 나머지는 같은 사실의 번역), 기한 알림 안내. 분석·광고 스크립트와 App Store 링크는 없습니다. CSP 메타는 이전에도 없었고 추가하지 않았습니다.
 - `check-public.mjs`는 문서 골격과 유지 항목, 10개 언어 카탈로그 키, 이미지 크기·alt, 동작 줄이기 처리, 참조 자산의 존재와 형식(glTF·MP4·WebP), 스냅숏 rev를 검사합니다.
+- `check-scroll.mjs`는 실제 페이지의 진행률·유한 스크롤 보간·배지 충돌 회피 함수를 실행하며, 초기 정적 모드와 지연 실패의 높이 유지도 검사합니다. 실제 모바일 주소창·GPU 성능은 브라우저에서 별도로 확인합니다.
 - 용량: `public/assets` 약 14MB(GLB 약 6.5MB, 입장 영상 약 6.9MB).
 
-GitHub main 병합은 Pages 미러의 자동 배포를 시작합니다. 공식 주소는 별도 Sites 소스에 동일 공개 빌드를 반영하고 버전을 게시해야 갱신됩니다. 두 배포의 완료 상태를 따로 확인합니다.
+GitHub main 병합은 Cloudflare Pages의 운영 자동 배포와 GitHub Pages 미러 배포를 시작합니다. 두 배포의 완료 상태와 운영 주소의 실제 응답을 각각 확인합니다.
 
 ## 개인정보·이용약관·지원 페이지
 
 - 원문: `legal-content.json` — 한국어, 영어, 일본어, 태국어, 러시아어, 스페인어, 몽골어.
 - 생성: `node build-legal.mjs` → `public/privacy/<언어>.html`, `public/terms/<언어>.html`, `public/support/<언어>.html`.
 - 검증: `node check-legal.mjs` — 21개 페이지의 언어, 연락처, 언어 선택·내부 링크, 추적 스크립트 부재를 확인합니다.
-- 소개 페이지 검증: `node check-public.mjs`.
-- 공개 빌드: `node build-legal.mjs && node check-legal.mjs && node check-public.mjs && node build-public.mjs`.
+- 소개 페이지 검증: `node check-public.mjs && node check-scroll.mjs`.
+- 공개 빌드: `node build-legal.mjs && node check-legal.mjs && node check-public.mjs && node check-scroll.mjs && node build-public.mjs`.
 - 미리보기: `python3 -m http.server 8770 --bind 127.0.0.1 --directory public`.
 
 생성한 HTML만 직접 수정하지 말고 원문을 수정한 뒤 다시 생성합니다. 페이지에 분석·광고 스크립트나 앱 계정 토큰을 넣지 않습니다. 문의: 전성훈 / jsh097610@gmail.com.

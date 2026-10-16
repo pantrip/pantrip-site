@@ -19,6 +19,7 @@ jobs:
       - run: node --test private-admin/src/admin.test.mjs
       - run: node build-legal.mjs && node check-legal.mjs
       - run: node check-public.mjs
+      - run: node check-scroll.mjs
       - uses: actions/upload-pages-artifact@v3
         with:
           path: public
