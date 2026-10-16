@@ -65,19 +65,19 @@ html{background:var(--bg)}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
 a{color:inherit}
 :focus-visible{outline:2px solid var(--lime);outline-offset:4px;border-radius:6px}
-#gl{position:fixed;left:0;top:0;width:100%;height:100vh;height:100lvh;display:block;z-index:0;pointer-events:none}
+#gl{position:fixed;left:0;top:0;width:100%;height:var(--story-height,100svh);display:block;z-index:0;pointer-events:none}
 main{position:relative;z-index:1;overflow-x:clip}
 .scrolly{position:relative}
-#s1{height:330vh}#s2{height:230vh}#s3{height:420vh}
-.stage{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden}
+#s1{height:calc(var(--story-height,100svh)*3.3)}#s2{height:calc(var(--story-height,100svh)*2.3)}#s3{height:calc(var(--story-height,100svh)*4.2)}
+.stage{position:sticky;top:0;height:var(--story-height,100svh);overflow:hidden}
 .still{position:absolute;inset:0;margin:0;transition:opacity .9s ease;background:var(--bg)}
 .still img{width:100%;height:100%;object-fit:cover;display:block}
 .stage[data-ready] .still{opacity:0;visibility:hidden;transition:opacity .9s ease,visibility 0s .9s}
-html.live #s1 .still,html.live #s2 .still{display:none}
+.stage:not([data-ready]) .anim-only,.stage:not([data-ready]) .anim-only *{visibility:hidden!important}
 html.static #gl{display:none}
-html.static .scrolly,html.static #s1,html.static #s2,html.static #s3{height:auto}
-html.static .stage{position:relative}
-html.static .stage .still{opacity:1;visibility:visible}
+html.static:not(.fallback) .scrolly,html.static:not(.fallback) #s1,html.static:not(.fallback) #s2,html.static:not(.fallback) #s3{height:auto}
+html.static:not(.fallback) .stage{position:relative}
+html.static .stage .still{opacity:1;visibility:visible;transition:none}
 html.static .anim-only{display:none!important}
 html.capture .line,html.capture .brand{visibility:hidden}
 /* per-script faces (loaded on demand); Korean and Latin/Vietnamese keep Gowun, which carries latin-ext + vietnamese */
@@ -129,6 +129,9 @@ html.capture .scrolly{height:100vh}
 .tags{position:absolute;inset:0;z-index:2;pointer-events:none}
 .tag{position:absolute;left:0;top:0;display:flex;align-items:center;gap:4px;padding:6px 11px 7px;border-radius:999px;font-family:var(--tagf);font-size:15px;line-height:1;color:var(--tag-ink);background:var(--lime);box-shadow:0 6px 18px rgba(8,9,7,.28);white-space:nowrap;visibility:hidden;will-change:transform}
 .tag::after{content:"";position:absolute;left:50%;bottom:-4px;width:9px;height:9px;margin-left:-4.5px;background:inherit;transform:rotate(45deg);border-radius:1px}
+.tag{transform-origin:0 0}
+.tag-link{position:absolute;height:1px;background:rgba(244,242,233,.55);transform-origin:0 50%;pointer-events:none;visibility:hidden}
+.tag.compact{font-family:var(--sans);font-size:11px;line-height:1;padding:4px 6px}
 .tag[data-s="soon"]{background:var(--amber)}
 .tag[data-s="urgent"]{background:var(--coral);color:#fff8f3}
 .tag[data-s="done"]{background:var(--cream)}
@@ -258,13 +261,70 @@ html[lang="ja"] .pass-fields dd,html[lang="th"] .pass-fields dd,html[lang="ko"] 
   .tag{font-size:13px;padding:5px 9px 6px}
 }
 </style>
+<script id="story-geometry">
+/* Shared by live labels and their poster fallback; dimensions are CSS pixels. */
+window.PT_STORY = {
+  quietDelay(lastInput, now) { return Math.max(0, 180 - (now - lastInput)); },
+  progress(top, height, stageHeight) { return Math.min(1, Math.max(0, -top / Math.max(1, height - stageHeight))); },
+  follow(current, target, dt, entered) {
+    if (entered || Math.abs(target - current) > 0.15 || Math.abs(target - current) < 0.0002) return target;
+    return current + (target - current) * (1 - Math.exp(-12 * dt));
+  },
+  fitTags(tags, bounds) {
+    const gap = 6, placed = [], result = [];
+    const limit = (v, low, high) => Math.max(low, Math.min(high, v));
+    for (const [index, tag] of tags.map((tag, index) => [index, tag]).sort((a, b) => a[1].y - b[1].y)) {
+      const w = tag.w, h = tag.h;
+      const x = limit(tag.x - w / 2, bounds.x, bounds.x + bounds.w - w);
+      const y = limit(tag.y - h - 6, bounds.y, bounds.y + bounds.h - h);
+      const xs = [x, bounds.x, bounds.x + bounds.w - w];
+      const ys = [y, bounds.y, bounds.y + bounds.h - h];
+      for (const box of placed) {
+        xs.push(box.x - w - gap, box.x + box.w + gap);
+        ys.push(box.y - h - gap, box.y + box.h + gap);
+      }
+      let best = null, score = Infinity;
+      for (const left of xs) for (const top of ys) {
+        if (left < bounds.x || left + w > bounds.x + bounds.w || top < bounds.y || top + h > bounds.y + bounds.h) continue;
+        if (placed.some(box => left < box.x + box.w + gap && left + w + gap > box.x && top < box.y + box.h + gap && top + h + gap > box.y)) continue;
+        const distance = (left - x) ** 2 + (top - y) ** 2;
+        if (distance < score) { score = distance; best = { x: left, y: top, w, h }; }
+      }
+      if (!best) {
+        // Dense short panes use compact labels, then a deterministic grid if anchors still crowd together.
+        const maxW = Math.max(...tags.map(t => t.w)), maxH = Math.max(...tags.map(t => t.h));
+        let cols = 1, scale = 0;
+        for (let count = 1; count <= tags.length; count++) {
+          const rows = Math.ceil(tags.length / count);
+          const fit = Math.min(1, (bounds.w - gap * (count - 1)) / (maxW * count), (bounds.h - gap * (rows - 1)) / (maxH * rows));
+          if (fit > scale) { scale = fit; cols = count; }
+        }
+        return tags.map((t, i) => ({ x: bounds.x + (i % cols) * (maxW * scale + gap), y: bounds.y + Math.floor(i / cols) * (maxH * scale + gap), w: t.w * scale, h: t.h * scale, scale }));
+      }
+      placed.push(best); result[index] = best;
+    }
+    return result;
+  }
+};
+</script>
 <script>
 /* Decide live vs static before first paint. Static = reduced motion, no WebGL2, or the module never arriving. */
 (function(){var d=document.documentElement,q=location.search.indexOf('still=')>-1,ok=false;
 try{ok=!!document.createElement('canvas').getContext('webgl2')}catch(e){}
 if(q){d.classList.add('capture','live');return}
-if(ok&&!matchMedia('(prefers-reduced-motion: reduce)').matches){d.classList.add('live');
-setTimeout(function(){if(!window.__ptBoot){d.classList.remove('live');d.classList.add('static')}},12000)}
+if(ok&&!matchMedia('(prefers-reduced-motion: reduce)').matches){
+var measure=document.createElement('div');measure.style.cssText='position:fixed;height:100vh;height:100svh;visibility:hidden';d.appendChild(measure);
+d.style.setProperty('--story-height',measure.getBoundingClientRect().height+'px');measure.remove();d.classList.add('live');
+var width=innerWidth;
+addEventListener('resize',function(){
+if(width===innerWidth)return;
+var sections=[].slice.call(document.querySelectorAll('.scrolly')),active=sections.find(function(el){var r=el.getBoundingClientRect();return r.top<=0&&r.bottom>0});
+var fraction=active?-active.getBoundingClientRect().top/active.offsetHeight:0;
+var probe=document.createElement('div');probe.style.cssText='position:fixed;height:100vh;height:100svh;visibility:hidden';d.appendChild(probe);
+d.style.setProperty('--story-height',probe.getBoundingClientRect().height+'px');probe.remove();width=innerWidth;
+if(active)scrollTo(0,active.offsetTop+fraction*active.offsetHeight);
+});
+setTimeout(function(){if(!window.__ptBoot){d.classList.remove('live');d.classList.add('static','fallback');document.dispatchEvent(new Event('pt-static'))}},12000)}
 else d.classList.add('static');})();
 </script>
 </head>
@@ -285,7 +345,7 @@ else d.classList.add('static');})();
 
   <section id="s2" class="scrolly" data-t-aria="s2">
     <div class="stage">
-      <picture class="still"><source media="(max-width:700px)" srcset="assets/stills/s2-tall.webp"><img src="assets/stills/s2-wide.webp" data-t-alt="alt2" alt="" width="1440" height="900" loading="lazy"></picture>
+      <picture class="still"><source media="(max-width:700px)" srcset="assets/stills/s2-tall.webp"><img src="assets/stills/s2-wide.webp" data-t-alt="alt2" alt="" width="1440" height="900"></picture>
       <h2 class="line l2" data-t="l2">찰칵, 끝.</h2>
       <div class="vf anim-only" aria-hidden="true"><i></i><i></i><i></i><i></i><span class="vf-focus"></span></div>
       <div class="shutter anim-only" aria-hidden="true"></div>
@@ -297,7 +357,7 @@ else d.classList.add('static');})();
 
   <section id="s3" class="scrolly" data-t-aria="s3">
     <div class="stage">
-      <picture class="still"><source media="(max-width:700px)" srcset="assets/stills/s3-tall.webp"><img src="assets/stills/s3-wide.webp" data-t-alt="alt3" alt="" width="1440" height="900" loading="lazy"></picture>
+      <picture class="still"><source media="(max-width:700px)" srcset="assets/stills/s3-tall.webp"><img src="assets/stills/s3-wide.webp" data-t-alt="alt3" alt="" width="1440" height="900"></picture>
       <h2 class="line l3" data-t="l3">내 냉장고 그대로, 손 안의 주방에.</h2>
       <div class="pane anim-only" data-pane="a"><span class="cap" data-t="capA">우리 집 냉장고</span></div>
       <div class="pane anim-only" data-pane="b"><span class="cap" data-t="capB">Pantrip 주방</span></div>
@@ -468,8 +528,12 @@ function renderMarks(){
     var box=layer.getBoundingClientRect(), iw=m.w, ih=m.h, s=Math.max(box.width/iw,box.height/ih), dx=(box.width-iw*s)/2, dy=(box.height-ih*s)/2;
     var html='';
     (m.panes||[]).forEach(function(p,i){ html+='<span class="cap" style="left:'+(dx+p[0]*iw*s+12).toFixed(1)+'px;top:'+(dy+p[1]*ih*s+12).toFixed(1)+'px">'+(i?c.capB:c.capA)+'</span>' });
-    (m.tags||[]).forEach(function(t){ html+='<span class="tag" data-s="'+t[3]+'" style="visibility:visible;transform:translate('+(dx+t[0]*iw*s).toFixed(1)+'px,'+(dy+t[1]*ih*s).toFixed(1)+'px) translate(-50%,-100%) translateY(-6px)"><b>'+dday(t[2],I.lang)+'</b></span>' });
+    (m.tags||[]).forEach(function(t){ html+='<span class="tag'+(box.width<600?' compact':'')+'" title="'+dday(t[2],I.lang)+'" aria-label="'+dday(t[2],I.lang)+'" data-s="'+t[3]+'" style="visibility:visible"><b>'+(box.width<600?'D-'+t[2]:dday(t[2],I.lang))+'</b></span>' });
     layer.innerHTML=html;
+    var tags=[].slice.call(layer.querySelectorAll('.tag'));
+    var anchors=tags.map(function(el,i){var t=m.tags[i];return {x:dx+t[0]*iw*s,y:dy+t[1]*ih*s,w:el.offsetWidth,h:el.offsetHeight}});
+    var boxes=window.PT_STORY.fitTags(anchors,{x:8,y:box.height*.25,w:box.width-16,h:box.height*.75-8});
+    boxes.forEach(function(p,i){tags[i].style.transform='translate('+p.x.toFixed(1)+'px,'+p.y.toFixed(1)+'px) scale('+(p.scale||1)+')'});
   });
 }
 function apply(lang){
@@ -488,6 +552,7 @@ window.PT_I18N=I;
 apply(pick());
 document.getElementById('lang-select').addEventListener('change',function(e){ var v=e.target.value; try{localStorage.setItem('pt-lang',v)}catch(err){} apply(v) });
 addEventListener('resize',renderMarks);
+document.addEventListener('pt-static',renderMarks);
 })();
 </script>
 <script>
@@ -617,7 +682,7 @@ window.__ptBoot = true;
 const root = document.documentElement;
 const Q = new URLSearchParams(location.search);
 const CAPTURE = Q.get('still');            // dev hook: renders one section's composed frame (used to make the static fallbacks)
-const goStatic = () => { root.classList.remove('live'); root.classList.add('static'); };
+const goStatic = () => { root.classList.remove('live'); root.classList.add('static', 'fallback'); document.dispatchEvent(new Event('pt-static')); };
 if (root.classList.contains('live')) main().catch(e => { console.error(e); goStatic(); });
 
 /* ---------- small math ---------- */
@@ -671,12 +736,17 @@ function patch(mat, u) {
 
 async function main() {
   const canvas = document.getElementById('gl');
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-  const DPR = Math.min(devicePixelRatio || 1, 1.75);
+  const bootTimeout = setTimeout(() => { if (root.classList.contains('live')) goStatic(); }, 20000);
+  const postersReady = Promise.all([...document.querySelectorAll('.stage .still img')].map(img => img.decode().catch(() => {})));
+  const mobile = matchMedia('(max-width:760px), (pointer:coarse)').matches;
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'default' });
+  canvas.addEventListener('webglcontextlost', event => { event.preventDefault(); goStatic(); });
+  const DPR = Math.min(devicePixelRatio || 1, mobile ? 1.5 : 1.75);
   renderer.setPixelRatio(DPR);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.shadowMap.enabled = true;
+  renderer.shadowMap.autoUpdate = false;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.autoClear = false;
   const env = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
@@ -738,7 +808,7 @@ async function main() {
     floor.rotation.x = -Math.PI / 2; floor.position.y = -FT; floor.receiveShadow = true; if (withFloor) g.add(floor);
     const spot = new THREE.SpotLight(0xfff1de, 15, 7, 1.15, 0.85, 1.4);
     spot.position.set(0, FH - 0.08, FD / 2 - 0.1); spot.target.position.set(0, 0.5, -0.35);
-    spot.castShadow = true; spot.shadow.mapSize.set(1024, 1024); spot.shadow.bias = -0.0004; spot.shadow.normalBias = 0.01;
+    spot.castShadow = true; spot.shadow.mapSize.set(mobile ? 512 : 1024, mobile ? 512 : 1024); spot.shadow.bias = -0.0004; spot.shadow.normalBias = 0.01;
     spot.shadow.camera.near = 0.2; spot.shadow.camera.far = 5;
     const fill = new THREE.PointLight(0xfff1de, 2.4, 6, 1.6); fill.position.set(0, FH * 0.55, FD / 2 + 0.7);
     g.add(spot, spot.target, fill);
@@ -773,7 +843,7 @@ async function main() {
     scene.fog = new THREE.Fog(0x07080a, 10, 24);
     // Pantrip's default kitchen "Studio weekends", at night: only a bedside lamp and the city in the window
     const room = studio.scene; room.scale.setScalar(0.89);
-    room.traverse(o => { if (!o.isMesh) return; o.receiveShadow = true; o.castShadow = true;
+    room.traverse(o => { if (!o.isMesh) return; o.receiveShadow = true; o.castShadow = !mobile;
       (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { m.envMapIntensity = 0.035; if (m.name === '__unlit__59') m.color.setScalar(0.62); if (m.name === '__unlit__57') m.color.multiplyScalar(0.8); }); });
     scene.add(room);
     scene.add(new THREE.AmbientLight(0x27304a, 0.22));
@@ -784,7 +854,7 @@ async function main() {
     const f = fridge(rig, { floor: false, door: 1.62 });
     const spill = new THREE.SpotLight(0xe8f0ff, 26, 10, 1.05, 0.85, 1.4);
     spill.position.set(0, 1.7, 0.75); spill.target.position.set(0.4, -0.12, 3.6);
-    spill.castShadow = true; spill.shadow.mapSize.set(1024, 1024); spill.shadow.bias = -0.0005; spill.shadow.camera.near = 0.3; spill.shadow.camera.far = 9;
+    spill.castShadow = true; spill.shadow.mapSize.set(mobile ? 512 : 1024, mobile ? 512 : 1024); spill.shadow.bias = -0.0005; spill.shadow.camera.near = 0.3; spill.shadow.camera.far = 9;
     rig.add(spill, spill.target);
     const cam = new THREE.PerspectiveCamera(34, 1, 0.05, 60);
     const dustP = dust(260, FW - 0.1, FH - 0.1, FD - 0.1); dustP.position.set(0, 0.05, 0); rig.add(dustP);
@@ -819,8 +889,7 @@ async function main() {
       // light: each day the door shuts (dip), and the fridge gets a little colder and dimmer
       let dip = 0; for (const c of DAYS) dip = Math.max(dip, 1 - smooth(0, 0.035, Math.abs(p - c)));
       const base = 1 - 0.8 * smooth(0.12, 0.9, p);
-      const tired = p > 0.86 && p < 0.97 && Math.sin(t * 31) * Math.sin(t * 17.3) > 0.7 ? 0.55 : 1;
-      const level = base * (1 - 0.92 * dip) * tired;
+      const level = base * (1 - 0.18 * dip);
       exposure = 1 - 0.25 * smooth(0.6, 1, p);
       f.spot.intensity = 15 * level; f.fill.intensity = 3 * level; spill.intensity = 26 * level;
       f.spot.color.lerpColors(WARM, COLD, smooth(0.15, 0.9, p)); f.fill.color.copy(f.spot.color); spill.color.copy(f.spot.color);
@@ -944,7 +1013,7 @@ async function main() {
       look.lerpVectors(V(0, 0, 0), tmp.copy(slot).add(V(0, 0.18, 0)), m); cam.lookAt(look);
       // shot, then the background lifts away
       const fl = Math.max(0, 1 - Math.abs(p - SHOT) / 0.022);
-      uni.uFlash.value = fl * 0.6; flash.style.opacity = (fl * 0.85).toFixed(3);
+      uni.uFlash.value = fl * 0.06; flash.style.opacity = (fl * 0.08).toFixed(3);
       uni.uT.value = smooth(SHOT + 0.02, 0.5, p);
       // fly to the shelf
       const k = smooth(0.5, 0.8, p);
@@ -979,13 +1048,14 @@ async function main() {
   /* ---------- tags ---------- */
   function mkTag(layer) {
     const el = document.createElement('span'); el.className = 'tag'; layer.appendChild(el);
+    const link = document.createElement('i'); link.className = 'tag-link'; layer.prepend(link);
     let txt = '', st = '';
     const v = new THREE.Vector3();
     return {
       el,
       set(text, state, pulse = false, n = -1) {
         el._n = n;
-        if (text === null) { el.style.visibility = 'hidden'; return; }
+        if (text === null) { el.style.visibility = link.style.visibility = 'hidden'; el.dataset.on = ''; return; }
         if (text !== txt) { txt = text; el.innerHTML = text === '✓' ? '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.6l3.1 3L13 4.6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>' : `<b>${text}</b>`; }
         if (state !== st) { st = state; el.dataset.s = state; }
         el.classList.toggle('pulse', pulse);
@@ -993,14 +1063,24 @@ async function main() {
       },
       place(obj, cam, r, alpha = 1) {
         if (el.style.visibility === 'hidden' && !el.dataset.on) return;
+        cam.updateMatrixWorld();
         obj.getWorldPosition(v); v.project(cam);
         const x = r.x + (v.x * 0.5 + 0.5) * r.w, y = r.y + (-v.y * 0.5 + 0.5) * r.h;
-        const inside = v.z < 1 && x > r.x + 8 && x < r.x + r.w - 8 && y > r.y + 64 && y < r.y + r.h;   // keep clear of the pane caption
+        const inside = v.z > -1 && v.z < 1 && x > r.x && x < r.x + r.w && y > r.y + 32 && y < r.y + r.h;
         el._x = x; el._y = y;
         el.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px) translate(-50%,-100%) translateY(-6px)`;
         el.style.visibility = inside && alpha > 0.02 ? 'visible' : 'hidden';
         el.style.opacity = alpha.toFixed(3);
+        link.style.visibility = 'hidden';
         el.dataset.on = '';
+        return inside && alpha > 0.02 ? { x, y, w: el.offsetWidth, h: el.offsetHeight } : null;
+      },
+      arrange(box) {
+        const x = box.x + box.w / 2, y = box.y + box.h;
+        const dx = el._x - x, dy = el._y - y;
+        Object.assign(link.style, { left: x + 'px', top: y + 'px', width: Math.hypot(dx, dy) + 'px', transform: `rotate(${Math.atan2(dy, dx)}rad)`, visibility: 'visible', opacity: el.style.opacity });
+        el._x = x; el._y = y + 6;
+        el.style.transform = `translate(${box.x.toFixed(1)}px,${box.y.toFixed(1)}px) scale(${box.scale || 1})`;
       }
     };
   }
@@ -1035,7 +1115,7 @@ async function main() {
   const S3b = { ready: false, exposure: 1 };
   const stage3 = document.querySelector('#s3 .stage');
   const tags3 = SIX.map(() => mkTag(stage3.querySelector('.tags')));
-  loader.loadAsync('assets/kitchen-hanok.glb').then(gltf => {
+  const hanok = loader.loadAsync('assets/kitchen-hanok.glb').then(gltf => {
     const scene = new THREE.Scene(); scene.background = new THREE.Color(0xf2ede0); scene.environment = env;
     gltf.scene.traverse(o => { if (o.isMesh) { o.castShadow = o.receiveShadow = true; (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { m.envMapIntensity = 0.3; }); } });
     scene.add(gltf.scene);
@@ -1043,7 +1123,7 @@ async function main() {
     scene.add(new THREE.AmbientLight(0xd6e6ff, 0.22 * Math.PI));
     const sun = new THREE.DirectionalLight(0xffedd4, 0.82 * Math.PI);
     sun.target.position.set(1.2, 0.8, -2); sun.position.copy(sun.target.position).add(V(-0.21694, 0.86603, 0.45048).multiplyScalar(30));
-    sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.02;
+    sun.castShadow = true; sun.shadow.mapSize.set(mobile ? 1024 : 2048, mobile ? 1024 : 2048); sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.02;
     Object.assign(sun.shadow.camera, { left: -7, right: 7, top: 7, bottom: -7, near: 1, far: 70 });
     scene.add(sun, sun.target);
     // fridge slot of the hanok pack: transform scale .72, translate (1.45, .34, -2.05); front-layer anchors
@@ -1059,7 +1139,6 @@ async function main() {
     const cam = new THREE.PerspectiveCamera(38, 1, 0.05, 400);
     const J = V(1.45, 1.72, -2.05);
     Object.assign(S3b, { scene, cam, items, J, ready: true });
-    stage3.dataset.ready = '';
   }).catch(e => console.warn('kitchen failed to load; poster stays', e));
 
   S3b.update = (p, t, r, day) => {
@@ -1081,15 +1160,24 @@ async function main() {
   const tagState = n => n >= 5 ? 'fresh' : n >= 2 ? 'soon' : 'urgent';
   function tags3Update(p, day, rb) {
     if (!S3b.ready) { tags3.forEach(tg => tg.set(null)); return; }
+    const visible = [], anchors = [];
     S3b.items.forEach((g, i) => {
       const d = SIX[i], tg = tags3[i];
       const left = d.exp - Math.floor(day);
       const done = day >= d.use + 0.45, gone = day >= d.use + 0.95;
       if (gone) { tg.set(null); return; }
       const remind = !done && day >= d.use;
-      tg.set(done ? '✓' : window.PT_I18N.dday(left), done ? 'done' : tagState(left), remind, done ? -1 : left);
-      tg.place(g.userData.anchor, S3b.cam, rb, 1 - smooth(d.use + 0.75, d.use + 0.95, day));
+      const label = done ? '✓' : window.PT_I18N.dday(left);
+      tg.el.title = label;
+      tg.el.setAttribute('aria-label', label);
+      const compact = rb.w < 360 || rb.h < 180;
+      tg.el.classList.toggle('compact', compact);
+      tg.set(done ? '✓' : compact ? 'D-' + left : label, done ? 'done' : tagState(left), remind, done ? -1 : left);
+      const anchor = tg.place(g.userData.anchor, S3b.cam, rb, 1 - smooth(d.use + 0.75, d.use + 0.95, day));
+      if (anchor) { visible.push(tg); anchors.push(anchor); }
     });
+    const boxes = window.PT_STORY.fitTags(anchors, { x: rb.x + 8, y: rb.y + 38, w: rb.w - 16, h: rb.h - 46 });
+    boxes.forEach((box, i) => visible[i].arrange(box));
   }
 
   /* ---------- layout + loop ---------- */
@@ -1100,10 +1188,22 @@ async function main() {
   function paneRects(w, h) {
     const lb = l3.getBoundingClientRect().bottom - stage3.getBoundingClientRect().top;
     const g = Math.max(16, Math.min(72, w * 0.05)), top = lb + 26, bot = h - (w > 760 ? 40 : 22), gap = 16;
-    if (w > 760) { const pw = (w - 2 * g - gap) / 2; return [{ x: g, y: top, w: pw, h: bot - top }, { x: g + pw + gap, y: top, w: pw, h: bot - top }]; }
+    if (w > 760 || (w > 480 && w > h * 1.2)) { const pw = (w - 2 * g - gap) / 2; return [{ x: g, y: top, w: pw, h: bot - top }, { x: g + pw + gap, y: top, w: pw, h: bot - top }]; }
     const ph = (bot - top - gap) / 2; return [{ x: g, y: top, w: w - 2 * g, h: ph }, { x: g, y: top + ph + gap, w: w - 2 * g, h: ph }];
   }
-  let cw = 0, ch = 0;
+  let cw = canvas.clientWidth, ch = canvas.clientHeight, layoutWidth = innerWidth;
+  let last = performance.now(), frames = 0, raf = 0;
+  let lastInput = -Infinity, inputY = scrollY;
+  const noteInput = () => { lastInput = performance.now(); inputY = scrollY; };
+  async function waitForQuiet() {
+    let delay;
+    do {
+      if (scrollY !== inputY) noteInput();
+      delay = window.PT_STORY.quietDelay(lastInput, performance.now());
+      if (delay) await new Promise(resolve => setTimeout(resolve, delay));
+    } while (delay && root.classList.contains('live'));
+  }
+  renderer.setSize(cw, ch, false);
   function draw(scene, cam, sr, r, exposure) {
     const x = sr.left + r.x, y = sr.top + r.y, yy = ch - y - r.h;
     renderer.setViewport(x, yy, r.w, r.h); renderer.setScissor(x, yy, r.w, r.h);
@@ -1111,34 +1211,87 @@ async function main() {
     renderer.toneMappingExposure = exposure;
     renderer.render(scene, cam);
   }
-  document.querySelector('#s1 .stage').dataset.ready = '';
-  document.querySelector('#s2 .stage').dataset.ready = '';
-  let last = performance.now(), frames = 0;
+  const nextFrame = () => new Promise(resolve => requestAnimationFrame(resolve));
+  const uploaded = new Set();
+  async function prepare(model, r) {
+    const defer = model !== S1;
+    if (defer) await waitForQuiet();
+    if (!root.classList.contains('live')) return;
+    model.update(0, 0, r, 0);
+    model.cam.aspect = r.w / r.h; model.cam.updateProjectionMatrix();
+    const objects = [];
+    model.scene.traverse(o => {
+      objects.push([o, o.visible, o.frustumCulled]); o.visible = true; o.frustumCulled = false;
+    });
+    let completed = false;
+    try {
+      const textures = new Set();
+      for (const [o] of objects) for (const m of o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : []) {
+        for (const value of Object.values(m)) if (value?.isTexture) textures.add(value);
+        for (const uniform of Object.values(m.uniforms || {})) if (uniform.value?.isTexture) textures.add(uniform.value);
+      }
+      for (const texture of textures) if (!uploaded.has(texture)) {
+        await nextFrame();
+        if (defer) await waitForQuiet();
+        if (!root.classList.contains('live')) return;
+        renderer.initTexture(texture); uploaded.add(texture);
+      }
+      if (defer) await waitForQuiet();
+      if (!root.classList.contains('live')) return;
+      await renderer.compileAsync(model.scene, model.cam);
+      await nextFrame();
+      if (defer) await waitForQuiet();
+      if (!root.classList.contains('live')) return;
+      // Posters cover the default framebuffer while geometry and shadow passes are primed.
+      renderer.setScissorTest(false); renderer.setViewport(0, 0, cw, ch); renderer.clear();
+      renderer.shadowMap.needsUpdate = true;
+      renderer.render(model.scene, model.cam);
+      completed = true;
+    } finally {
+      for (const [o, visible, culled] of objects) { o.visible = visible; o.frustumCulled = culled; }
+      if (completed) model.prepared = true;
+      // Restore the visible scene in this task before an off-screen warmup can be painted.
+      if (root.classList.contains('live')) { cancelAnimationFrame(raf); frame(performance.now()); }
+    }
+  }
+  function requestFrame() {
+    if (!raf && !document.hidden && root.classList.contains('live')) raf = requestAnimationFrame(frame);
+  }
   function frame(now) {
-    requestAnimationFrame(frame);
-    if (document.hidden) return;
-    const dt = Math.min(0.1, (now - last) / 1000); last = now;
-    const t = now / 1000;
+    raf = 0;
+    if (document.hidden || !root.classList.contains('live')) return;
+    const dt = Math.min(0.1, Math.max(1 / 120, (now - last) / 1000)); last = now;
     if (canvas.clientWidth !== cw || canvas.clientHeight !== ch) { cw = canvas.clientWidth; ch = canvas.clientHeight; renderer.setSize(cw, ch, false); }
-    const vh = innerHeight;
+    let settling = false, drew = false;
     renderer.setScissorTest(false); renderer.setClearColor(0x131412, 1); renderer.clear(); renderer.setScissorTest(true);
     for (const s of SECTIONS) {
       const sr = s.stage.getBoundingClientRect();
-      if (sr.bottom <= 0 || sr.top >= ch || sr.height < 2) continue;
-      if (!CAPTURE) { const r = s.el.getBoundingClientRect(); const target = clamp(-r.top / Math.max(1, r.height - vh)); s.p += (target - s.p) * Math.min(1, dt * 7); }
+      if (sr.bottom <= 0 || sr.top >= Math.min(ch, innerHeight) || sr.height < 2) { s.visible = false; continue; }
+      if (!CAPTURE) {
+        const r = s.el.getBoundingClientRect(), target = window.PT_STORY.progress(r.top, r.height, sr.height);
+        s.p = window.PT_STORY.follow(s.p, target, dt, !s.visible);
+        settling ||= s.p !== target;
+      }
+      s.visible = true;
+      const t = CAPTURE ? now / 1000 : s.p * 12;
+      renderer.shadowMap.needsUpdate = true;
       const full = { x: 0, y: 0, w: sr.width, h: sr.height };
-      if (s.id === 's1') { S1.update(s.p, t, full); draw(S1.scene, S1.cam, sr, full, S1.exposure); }
-      else if (s.id === 's2') { S2.update(s.p, t, full); draw(S2.scene, S2.cam, sr, full, S2.exposure); }
+      if (s.id === 's1') { if (!S1.prepared) continue; S1.update(s.p, t, full); draw(S1.scene, S1.cam, sr, full, S1.exposure); }
+      else if (s.id === 's2') { if (!S2.prepared) continue; S2.update(s.p, t, full); draw(S2.scene, S2.cam, sr, full, S2.exposure); }
       else {
+        if (!S3a.prepared || !S3b.prepared) continue;
         const [ra, rb] = paneRects(sr.width, sr.height);
         panes.forEach((el, i) => { const r = i ? rb : ra; Object.assign(el.style, { left: r.x + 'px', top: r.y + 'px', width: r.w + 'px', height: r.h + 'px' }); });
         const day = clamp((s.p - 0.06) / 0.88) * 6.98;
         S3a.update(s.p, t, ra, day); draw(S3a.scene, S3a.cam, sr, ra, 1);
-        if (S3b.ready) { S3b.update(s.p, t, rb, day); draw(S3b.scene, S3b.cam, sr, rb, 1); }
+        renderer.shadowMap.needsUpdate = true;
+        S3b.update(s.p, t, rb, day); draw(S3b.scene, S3b.cam, sr, rb, 1);
         tags3Update(s.p, day, rb);
       }
+      s.stage.dataset.ready = '';
+      drew = true;
     }
-    if (CAPTURE && ++frames === 40) {
+    if (CAPTURE && drew && ++frames === 40) {
       // dev hook: where the labels sit on this frame, as fractions of the stage, for the static fallback
       const st = SECTIONS.find(s => s.id === CAPTURE).stage, r = st.getBoundingClientRect();
       const tags = [...st.querySelectorAll('.tags .tag')].filter(t => t.style.visibility === 'visible' && t._n >= 0).map(t => [+(t._x / r.width).toFixed(4), +(t._y / r.height).toFixed(4), t._n, t.dataset.s]);
@@ -1146,8 +1299,34 @@ async function main() {
       document.body.dataset.marks = JSON.stringify({ tags, panes });
       root.dataset.captured = '1';
     }
+    if (settling || (CAPTURE && frames < 40)) requestFrame();
   }
-  requestAnimationFrame(frame);
+  addEventListener('scroll', () => { noteInput(); requestFrame(); }, { passive: true });
+  addEventListener('wheel', noteInput, { passive: true });
+  addEventListener('touchmove', noteInput, { passive: true });
+  addEventListener('pageshow', requestFrame);
+  addEventListener('resize', () => {
+    if (innerWidth !== layoutWidth && !CAPTURE) {
+      layoutWidth = innerWidth;
+      SECTIONS.forEach(s => { s.visible = false; });
+    }
+    requestFrame();
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { cancelAnimationFrame(raf); raf = 0; }
+    else { last = performance.now(); requestFrame(); }
+  });
+  document.addEventListener('pt-lang', requestFrame);
+  document.fonts?.addEventListener('loadingdone', requestFrame);
+  requestFrame();
+  await postersReady;
+  await prepare(S1, { x: 0, y: 0, w: cw, h: ch });
+  if (S1.prepared) { clearTimeout(bootTimeout); noteInput(); }
+  await prepare(S2, { x: 0, y: 0, w: cw, h: ch });
+  await prepare(S3a, paneRects(cw, ch)[0]);
+  hanok.then(async () => {
+    if (S3b.ready) await prepare(S3b, paneRects(cw, ch)[1]);
+  }).catch(error => { console.warn('kitchen preparation failed; poster stays', error); });
 }
 </script>
 </body>

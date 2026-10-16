@@ -107,7 +107,7 @@ console.log('PASS: document shell, verification, canonical, referrer, favicons, 
 // Motion: reduced motion gets static frames and no autoplay.
 assert(html.includes("matchMedia('(prefers-reduced-motion: reduce)')"),'Reduced motion is read in script');
 assert(/@media \(prefers-reduced-motion:reduce\)/.test(html),'Reduced motion CSS');
-assert(html.includes('html.static .stage .still{opacity:1;visibility:visible}'),'Static frames for reduced motion and no WebGL');
+assert(html.includes('html.static .stage .still{opacity:1;visibility:visible;transition:none}'),'Static frames show immediately for reduced motion and no WebGL');
 assert(/<video class="gate-vid" muted playsinline loop preload="none"/.test(html) && !/<video[^>]*\sautoplay/.test(html),'Entrance video never autoplays from markup');
 console.log('PASS: unique ids, image sizes, 10-language catalogs, reduced motion');
 

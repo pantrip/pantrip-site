@@ -10,6 +10,7 @@
 !/build-legal.mjs
 !/check-legal.mjs
 !/check-public.mjs
+!/check-scroll.mjs
 !/build-public.mjs
 !/.openai/
 !/build-private-admin.mjs
