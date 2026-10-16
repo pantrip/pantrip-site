@@ -8,7 +8,7 @@
 
 - 3D: three.js 0.160.0을 import map으로 `cdn.jsdelivr.net/npm/three@0.160.0`에서 불러오고, 글꼴은 Google Fonts입니다. 앱의 실제 상품 GLB(`assets/products/`)와 한옥·원룸 주방 GLB(`assets/kitchen-hanok.glb`, `assets/kitchen-studio.glb`)는 quantize·WebP만 쓰므로 별도 디코더가 필요 없습니다. 호스트가 `.glb`를 그대로 제공해야 합니다.
 - WebGL이 없거나 동작 줄이기 설정이면 `assets/stills/`의 정지 장면과 HTML 라벨을 보여 줍니다. 출발 안내판은 모든 등급에서 영상 대신 실제 주방 이미지를 표시합니다. 정지 장면은 캡처용 파라미터(`?still=s1&p=0.72&camp=0.12`, `?still=s2&p=0.93`, `?still=s3&p=0.33`)로 1440×900과 390×844@2x를 렌더링해 만들었습니다.
-- 스크롤 안정성(2026-10-16): 캔버스·장면·스크롤 구간은 최초 small viewport 높이를 공유하고 주소창에 의한 높이 변화에는 재배치하지 않습니다. 가로 폭이 바뀌면 새 높이를 측정하고 해당 구간의 위치를 보존합니다. 로딩·WebGL 컨텍스트 실패 후에는 구간 높이를 유지한 채 정지 장면으로 전환합니다. 각 장면의 텍스처·셰이더·첫 실제 렌더를 포스터 뒤에서 순서대로 준비하며, 스크롤이 멈추면 추가 렌더링도 멈춥니다. 모바일은 해상도·그림자 크기를 낮추고 좁은 주방 패널의 D-day는 간결한 배지와 연결선으로 표시합니다(전체 번역은 aria-label/title 유지).
+- 스크롤 안정성(2026-10-16): 캔버스·장면·스크롤 구간은 최초 small viewport 높이를 공유하고 주소창에 의한 높이 변화에는 재배치하지 않습니다. 가로 폭이 바뀌면 새 높이를 측정하고 해당 구간의 위치를 보존합니다. 로딩·WebGL 컨텍스트 실패 후에는 구간 높이를 유지한 채 정지 장면으로 전환합니다. 각 장면의 텍스처·셰이더·첫 실제 렌더를 포스터 뒤에서 순서대로 준비하며, 스크롤이 멈추면 추가 렌더링도 멈춥니다. S3 비교 주방이 보이는 동안에는 큰 스크롤 이동도 보간하여 D-day → 완료 체크 → 물품 사라짐을 순서대로 보여 주며, 다시 진입할 때는 실제 스크롤 위치로 즉시 맞춥니다. 모바일은 해상도·그림자 크기를 낮추고 좁은 주방 패널의 D-day는 간결한 배지와 연결선으로 표시합니다(전체 번역은 aria-label/title 유지).
 - 언어: 10개(ko, en, ja, es, de, fr, th, ru, mn, vi). 브라우저 언어로 시작하고 오른쪽 위 선택은 이 기기에 저장합니다. 주방 이름·D-day 표기·등급명은 앱의 Localizable.xcstrings 용어를 씁니다. 카탈로그 항목 이름은 7개 언어이며 de/fr/vi는 영어로 표시합니다.
 - 카탈로그 스냅숏: `assets/catalog/snapshot.json`(rev 709, 2026-10-14, 공개 카탈로그 schema 1). 갱신할 때는 카탈로그를 다시 받아 같은 필드만 추출합니다. 출시·판매 중인 항목과 무료 기본 상품만 쓰고, 주방 미리보기는 앱의 전체 주방 렌더 또는 기존 카탈로그 이미지를 WebP로 제공합니다. 선택한 이미지의 원본 비율을 유지해 전체 주방이 잘리지 않게 표시하며, 시그니처·프레스티지를 포함한 모든 등급에 같은 표시 방식을 적용합니다. 기존 입장 영상·포스터 파일은 보존하지만 홈페이지에서 로드하거나 재생하지 않습니다. 서드파티 CC BY 모델이 든 신발 모음과 주방 팩(온천·사바나·사막·보카주)은 제외합니다. 기존 입장 영상·포스터 메타데이터도 원본 이력으로 보존합니다. 스냅숏의 rev와 날짜는 하단 문구에 그대로 표시됩니다.
 - 출처: 원룸 창밖 야경 “Seoul-night-pano-cropped.jpg” by KLuwak(CC BY-SA 3.0), 사과 사진 USDA ARS(퍼블릭 도메인), 우주선 주방 일부 모델 “Rigged Astronaut” by J-Toastie(CC BY 3.0), 글꼴(SIL OFL), three.js(MIT). 하단 `출처`에 링크와 함께 표시합니다.
@@ -28,7 +28,7 @@ GitHub main 병합은 Cloudflare Pages의 운영 자동 배포와 GitHub Pages �
 - 공개 빌드: `node build-legal.mjs && node check-legal.mjs && node check-public.mjs && node check-scroll.mjs && node build-public.mjs`.
 - 미리보기: `python3 -m http.server 8770 --bind 127.0.0.1 --directory public`.
 
-생성한 HTML만 직접 수정하지 말고 원문을 수정한 뒤 다시 생성합니다. 페이지에 분석·광고 스크립트나 앱 계정 토큰을 넣지 않습니다. 문의: 전성훈 / jsh097610@gmail.com.
+생성한 HTML만 직접 수정하지 말고 원문을 수정한 뒤 다시 생성합니다. 페이지에 분석·광고 스크립트나 앱 계정 토큰을 넣지 않습니다. 공개 운영자·문의: Sanmaru Studio / hello@sanmarustudio.com(홈페이지 10개 언어와 정책·지원 페이지 공통).
 
 검색용 `robots.txt`와 `sitemap.xml`도 공개 빌드에 포함합니다. 홈페이지에는 공유 메타데이터와 WebSite/SoftwareApplication 구조화 데이터를 제공하며, 정책·지원 문서는 실제 Cloudflare Pages의 확장자 없는 공개 주소로 canonical과 상호 언어 링크를 생성합니다. sitemap은 홈페이지와 24개 정책·지원 문서만 포함하고 관리자/API는 제외합니다. robots는 접근 제어가 아니며 기존 관리자 인증을 대신하지 않습니다. 검색·AI 검색의 수집·색인·인용은 보장하지 않습니다.
 
