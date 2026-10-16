@@ -737,9 +737,9 @@ async function main() {
   const bootTimeout = setTimeout(() => { if (root.classList.contains('live')) goStatic(); }, 20000);
   const postersReady = Promise.all([...document.querySelectorAll('.stage .still img')].map(img => img.decode().catch(() => {})));
   const mobile = matchMedia('(max-width:760px), (pointer:coarse)').matches;
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: !mobile, powerPreference: 'default' });
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'default' });
   canvas.addEventListener('webglcontextlost', event => { event.preventDefault(); goStatic(); });
-  const DPR = Math.min(devicePixelRatio || 1, mobile ? 1.25 : 1.75);
+  const DPR = Math.min(devicePixelRatio || 1, mobile ? 1.5 : 1.75);
   renderer.setPixelRatio(DPR);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
