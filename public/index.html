@@ -171,10 +171,8 @@ html[lang="ja"] .sec-line,html[lang="th"] .sec-line{line-break:strict;word-break
 .flag{justify-self:end;padding:4px 8px;border-radius:4px;font-size:11px;line-height:1;font-weight:600;letter-spacing:.06em;color:var(--tag-ink);background:var(--lime);white-space:nowrap}
 .flag:empty{display:none}
 .gate{margin:0;position:sticky;top:24px}
-.gate-media{position:relative;aspect-ratio:9/16;border-radius:22px;overflow:hidden;background:radial-gradient(120% 80% at 50% 30%,#2a2e25,#0d0e0c);box-shadow:0 0 0 1px #2c2f27,0 40px 80px -40px #000}
-.gate-img,.gate-vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:opacity .35s ease}
-.gate-img.contain{object-fit:contain;padding:14%}
-.gate-media .off{opacity:0;pointer-events:none}
+.gate-media{position:relative;aspect-ratio:4/3;border-radius:22px;overflow:hidden;background:radial-gradient(120% 80% at 50% 30%,#2a2e25,#0d0e0c);box-shadow:0 0 0 1px #2c2f27,0 40px 80px -40px #000}
+.gate-img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:4%}
 .gate-cap{display:flex;flex-direction:column;gap:4px;padding:14px 4px 0}
 .gate-title{font-family:var(--serif);font-weight:400;font-size:18px;line-height:1.3}
 .gate-sub{font-size:13px;line-height:1.5;color:var(--muted)}
@@ -226,7 +224,6 @@ html[lang="ja"] .pass-fields dd,html[lang="th"] .pass-fields dd,html[lang="ko"] 
 @media (max-width:760px){
   .dep-grid{grid-template-columns:1fr}
   .gate{position:relative;top:0;order:-1;max-width:420px}
-  .gate-media{aspect-ratio:4/5}
   .board{padding:10px 6px 6px}
   .board-cols{display:none}
   .row{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"d d" "c f";row-gap:6px;padding:9px 8px}
@@ -377,7 +374,7 @@ else d.classList.add('static');})();
         <ul id="board-rows" class="board-rows" data-c-aria="boardAria"></ul>
       </div>
       <figure class="gate">
-        <div class="gate-media"><img class="gate-img" alt="" width="540" height="960"><video class="gate-vid" muted playsinline loop preload="none" aria-hidden="true"></video></div>
+        <div class="gate-media"><img class="gate-img" alt="" width="900" height="600"></div>
         <figcaption class="gate-cap" aria-live="polite"><b class="gate-title"></b><span class="gate-sub"></span></figcaption>
       </figure>
     </div>
@@ -470,16 +467,16 @@ var FT={"ko":{"footNav":"정책과 지원","privacy":"개인정보 처리방침"
 for(var lk in FT) for(var fk in FT[lk]) L[lk][fk]=FT[lk][fk];
 /* credits text (licence names and titles stay as published) */
 var CR={
-ko:{models:'3D 상품과 한옥·원룸 주방: Pantrip 앱에 실제로 쓰이는 모델. 웹용으로 압축했고, 일부 라벨과 질감은 단색이나 원본 이미지로 바꿨습니다.',catalog:'주방·상품·장식 이미지와 입장 영상: Pantrip 스토어 카탈로그',night:'원룸 창밖 야경'},
-en:{models:'3D products and the hanok and studio kitchens: the models used in the Pantrip app. Compressed for the web; some labels and textures replaced with flat colour or their source images.',catalog:'Kitchen, product and decor images and entrance videos: Pantrip store catalog',night:'Night view from the studio window'},
-ja:{models:'3D商品と韓屋・ワンルームのキッチン：Pantripアプリで実際に使われているモデル。Web用に圧縮し、一部のラベルや質感は単色や元画像に置き換えています。',catalog:'キッチン・商品・飾りの画像と入室動画：Pantripストアのカタログ',night:'ワンルームの窓の夜景'},
-es:{models:'Productos 3D y las cocinas hanok y estudio: los modelos que usa la app Pantrip. Comprimidos para la web; algunas etiquetas y texturas pasaron a color liso o a su imagen original.',catalog:'Imágenes de cocinas, productos y decoración, y videos de entrada: catálogo de la tienda Pantrip',night:'Vista nocturna desde la ventana del estudio'},
-de:{models:'3D-Produkte sowie Hanok- und Studio-Küche: die Modelle aus der Pantrip-App. Für das Web komprimiert; einige Etiketten und Texturen sind einfarbig oder durch ihre Originalbilder ersetzt.',catalog:'Bilder von Küchen, Produkten und Deko sowie Eingangsvideos: Katalog des Pantrip-Shops',night:'Nachtblick aus dem Studiofenster'},
-fr:{models:'Produits 3D et cuisines hanok et studio : les modèles utilisés dans l’app Pantrip. Compressés pour le web ; certaines étiquettes et textures sont passées en aplat ou en image d’origine.',catalog:'Images des cuisines, produits et décorations, et vidéos d’entrée : catalogue de la boutique Pantrip',night:'Vue nocturne depuis la fenêtre du studio'},
-th:{models:'สินค้า 3D และครัวบ้านฮันอกกับห้องสตูดิโอ: โมเดลที่ใช้จริงในแอป Pantrip บีบอัดสำหรับเว็บ และเปลี่ยนฉลากกับพื้นผิวบางส่วนเป็นสีพื้นหรือภาพต้นฉบับ',catalog:'ภาพครัว สินค้า ของตกแต่ง และวิดีโอเข้าบ้าน: แคตตาล็อกร้านค้า Pantrip',night:'วิวกลางคืนนอกหน้าต่างห้องสตูดิโอ'},
-ru:{models:'3D-товары и кухни ханок и студия: модели из приложения Pantrip. Сжаты для веба; часть этикеток и текстур заменена сплошным цветом или исходными изображениями.',catalog:'Изображения кухонь, товаров и декора, видео входа: каталог магазина Pantrip',night:'Ночной вид из окна студии'},
-mn:{models:'3D бараа, ханог болон студи гал тогоо: Pantrip аппад ашигладаг загварууд. Вэбэд зориулж шахсан, зарим шошго, бүтцийг нэг өнгө эсвэл эх зургаар сольсон.',catalog:'Гал тогоо, бараа, чимэглэлийн зураг болон орох видео: Pantrip дэлгүүрийн каталог',night:'Студийн цонхны шөнийн үзэмж'},
-vi:{models:'Sản phẩm 3D cùng bếp hanok và bếp studio: các mô hình dùng trong ứng dụng Pantrip. Đã nén cho web; một số nhãn và chất liệu được thay bằng màu trơn hoặc ảnh gốc.',catalog:'Ảnh bếp, sản phẩm, đồ trang trí và video vào cửa: danh mục cửa hàng Pantrip',night:'Cảnh đêm ngoài cửa sổ studio'}
+ko:{models:'3D 상품과 한옥·원룸 주방: Pantrip 앱에 실제로 쓰이는 모델. 웹용으로 압축했고, 일부 라벨과 질감은 단색이나 원본 이미지로 바꿨습니다.',catalog:'주방 미리보기: Pantrip 앱 렌더링·스토어 카탈로그. 상품·장식 이미지: Pantrip 스토어 카탈로그',night:'원룸 창밖 야경'},
+en:{models:'3D products and the hanok and studio kitchens: the models used in the Pantrip app. Compressed for the web; some labels and textures replaced with flat colour or their source images.',catalog:'Kitchen previews: Pantrip app renders and store catalog. Product and decor images: Pantrip store catalog',night:'Night view from the studio window'},
+ja:{models:'3D商品と韓屋・ワンルームのキッチン：Pantripアプリで実際に使われているモデル。Web用に圧縮し、一部のラベルや質感は単色や元画像に置き換えています。',catalog:'キッチンのプレビュー：Pantripアプリのレンダリングとストアのカタログ。商品・飾りの画像：Pantripストアのカタログ',night:'ワンルームの窓の夜景'},
+es:{models:'Productos 3D y las cocinas hanok y estudio: los modelos que usa la app Pantrip. Comprimidos para la web; algunas etiquetas y texturas pasaron a color liso o a su imagen original.',catalog:'Vistas previas de cocinas: renders de la app Pantrip y catálogo de la tienda. Imágenes de productos y decoración: catálogo de la tienda Pantrip',night:'Vista nocturna desde la ventana del estudio'},
+de:{models:'3D-Produkte sowie Hanok- und Studio-Küche: die Modelle aus der Pantrip-App. Für das Web komprimiert; einige Etiketten und Texturen sind einfarbig oder durch ihre Originalbilder ersetzt.',catalog:'Küchenvorschauen: Renderings der Pantrip-App und Shopkatalog. Produkt- und Dekobilder: Katalog des Pantrip-Shops',night:'Nachtblick aus dem Studiofenster'},
+fr:{models:'Produits 3D et cuisines hanok et studio : les modèles utilisés dans l’app Pantrip. Compressés pour le web ; certaines étiquettes et textures sont passées en aplat ou en image d’origine.',catalog:'Aperçus des cuisines : rendus de l’app Pantrip et catalogue de la boutique. Images des produits et décorations : catalogue de la boutique Pantrip',night:'Vue nocturne depuis la fenêtre du studio'},
+th:{models:'สินค้า 3D และครัวบ้านฮันอกกับห้องสตูดิโอ: โมเดลที่ใช้จริงในแอป Pantrip บีบอัดสำหรับเว็บ และเปลี่ยนฉลากกับพื้นผิวบางส่วนเป็นสีพื้นหรือภาพต้นฉบับ',catalog:'ภาพตัวอย่างครัว: ภาพเรนเดอร์จากแอป Pantrip และแคตตาล็อกร้านค้า ภาพสินค้าและของตกแต่ง: แคตตาล็อกร้านค้า Pantrip',night:'วิวกลางคืนนอกหน้าต่างห้องสตูดิโอ'},
+ru:{models:'3D-товары и кухни ханок и студия: модели из приложения Pantrip. Сжаты для веба; часть этикеток и текстур заменена сплошным цветом или исходными изображениями.',catalog:'Предпросмотр кухонь: рендеры приложения Pantrip и каталог магазина. Изображения товаров и декора: каталог магазина Pantrip',night:'Ночной вид из окна студии'},
+mn:{models:'3D бараа, ханог болон студи гал тогоо: Pantrip аппад ашигладаг загварууд. Вэбэд зориулж шахсан, зарим шошго, бүтцийг нэг өнгө эсвэл эх зургаар сольсон.',catalog:'Гал тогооны урьдчилсан зураг: Pantrip аппын рендер болон дэлгүүрийн каталог. Бараа, чимэглэлийн зураг: Pantrip дэлгүүрийн каталог',night:'Студийн цонхны шөнийн үзэмж'},
+vi:{models:'Sản phẩm 3D cùng bếp hanok và bếp studio: các mô hình dùng trong ứng dụng Pantrip. Đã nén cho web; một số nhãn và chất liệu được thay bằng màu trơn hoặc ảnh gốc.',catalog:'Ảnh xem trước bếp: ảnh kết xuất từ ứng dụng Pantrip và danh mục cửa hàng. Ảnh sản phẩm và đồ trang trí: danh mục cửa hàng Pantrip',night:'Cảnh đêm ngoài cửa sổ studio'}
 };
 for(var k in CR) for(var f in CR[k]) L[k].cr[f]=CR[k][f];
 /* the app's own D-day format per language (Localizable.xcstrings "D-%lld") */
@@ -559,16 +556,16 @@ document.addEventListener('pt-static',renderMarks);
 /* Catalog sections: real Pantrip store data (assets/catalog/snapshot.json). Item text uses the catalog's 7 locales; de/fr/vi fall back to English. No prices. */
 (function(){
 var UI={
-ko:{depLabel:'출발',dep:'오늘은 어느 주방으로?',colDest:'목적지',colClass:'등급',newTag:'신규',tiers:{basic:'스탠다드',extended:'디럭스',signature:'시그니처',prestige:'프레스티지'},knoll:'하나씩, 제자리에.',prod:'상품',decor:'장식',show:'보기',pass:'탑승권',collection:'컬렉션',valid:'유효 기간',includes:'포함',boardAria:'주방 출발 안내판. 하나를 고르면 입장 화면이 재생됩니다',asOf:'카탈로그 기준 {d} · rev {r}'},
-en:{depLabel:'Departures',dep:'Which kitchen today?',colDest:'Destination',colClass:'Class',newTag:'New',tiers:{basic:'Standard',extended:'Deluxe',signature:'Signature',prestige:'Prestige'},knoll:'Everything in its place.',prod:'Products',decor:'Decor',show:'Show',pass:'Boarding pass',collection:'Collection',valid:'Valid',includes:'Includes',boardAria:'Kitchen departures board. Pick one to watch its entrance.',asOf:'Catalog as of {d} · rev {r}'},
-ja:{depLabel:'出発',dep:'今日はどのキッチンへ？',colDest:'行き先',colClass:'クラス',newTag:'新着',tiers:{basic:'スタンダード',extended:'デラックス',signature:'シグネチャー',prestige:'プレステージ'},knoll:'ひとつずつ、定位置に。',prod:'商品',decor:'飾り',show:'表示',pass:'搭乗券',collection:'コレクション',valid:'有効期間',includes:'内容',boardAria:'キッチンの出発案内板。選ぶと入室画面が再生されます',asOf:'{d}時点のカタログ · rev {r}'},
-es:{depLabel:'Salidas',dep:'¿A qué cocina hoy?',colDest:'Destino',colClass:'Clase',newTag:'Nuevo',tiers:{basic:'Estándar',extended:'De lujo',signature:'De autor',prestige:'Prestigio'},knoll:'Cada cosa en su sitio.',prod:'Productos',decor:'Decoración',show:'Mostrar',pass:'Tarjeta de embarque',collection:'Colección',valid:'Válido',includes:'Incluye',boardAria:'Panel de salidas de cocinas. Elige una para ver su entrada.',asOf:'Catálogo al {d} · rev {r}'},
-de:{depLabel:'Abflug',dep:'Welche Küche heute?',colDest:'Ziel',colClass:'Klasse',newTag:'Neu',tiers:{basic:'Standard',extended:'Deluxe',signature:'Exklusiv',prestige:'Prestige'},knoll:'Alles an seinem Platz.',prod:'Produkte',decor:'Deko',show:'Anzeigen',pass:'Bordkarte',collection:'Sammlung',valid:'Gültig',includes:'Enthält',boardAria:'Abflugtafel der Küchen. Wähle eine, um ihren Eingang zu sehen.',asOf:'Katalog, Stand {d} · rev {r}'},
-fr:{depLabel:'Départs',dep:'Quelle cuisine aujourd’hui ?',colDest:'Destination',colClass:'Classe',newTag:'Nouveau',tiers:{basic:'Standard',extended:'Deluxe',signature:'Signature',prestige:'Prestige'},knoll:'Chaque chose à sa place.',prod:'Produits',decor:'Déco',show:'Afficher',pass:'Carte d’embarquement',collection:'Collection',valid:'Valable',includes:'Comprend',boardAria:'Tableau des départs des cuisines. Choisissez-en une pour voir son entrée.',asOf:'Catalogue au {d} · rev {r}'},
-th:{depLabel:'ขาออก',dep:'วันนี้ไปครัวไหนดี',colDest:'ปลายทาง',colClass:'ชั้น',newTag:'ใหม่',tiers:{basic:'มาตรฐาน',extended:'ดีลักซ์',signature:'ซิกเนเจอร์',prestige:'เพรสทีจ'},knoll:'ทุกอย่างอยู่ในที่ของมัน',prod:'สินค้า',decor:'ของตกแต่ง',show:'แสดง',pass:'บัตรขึ้นเครื่อง',collection:'คอลเลกชัน',valid:'ใช้ได้',includes:'รวม',boardAria:'กระดานขาออกของครัว เลือกหนึ่งครัวเพื่อดูหน้าจอเข้าบ้าน',asOf:'แคตตาล็อก ณ {d} · rev {r}'},
-ru:{depLabel:'Вылет',dep:'На какую кухню сегодня?',colDest:'Направление',colClass:'Класс',newTag:'Новое',tiers:{basic:'Стандарт',extended:'Делюкс',signature:'Фирменный',prestige:'Престиж'},knoll:'Всё на своих местах.',prod:'Товары',decor:'Декор',show:'Показать',pass:'Посадочный талон',collection:'Коллекция',valid:'Действует',includes:'Включает',boardAria:'Табло вылетов кухонь. Выберите кухню, чтобы посмотреть вход.',asOf:'Каталог на {d} · rev {r}'},
-mn:{depLabel:'Нислэг',dep:'Өнөөдөр аль гал тогоо руу?',colDest:'Чиглэл',colClass:'Ангилал',newTag:'Шинэ',tiers:{basic:'Стандарт',extended:'Делюкс',signature:'Онцгой',prestige:'Престиж'},knoll:'Бүгд байрандаа.',prod:'Бараа',decor:'Чимэглэл',show:'Харах',pass:'Онгоцны тасалбар',collection:'Цуглуулга',valid:'Хүчинтэй',includes:'Багтсан',boardAria:'Гал тогоонуудын нислэгийн самбар. Нэгийг сонгоод орох дүрсийг үзээрэй.',asOf:'{d}-ны каталог · rev {r}'},
-vi:{depLabel:'Khởi hành',dep:'Hôm nay đến căn bếp nào?',colDest:'Điểm đến',colClass:'Hạng',newTag:'Mới',tiers:{basic:'Tiêu chuẩn',extended:'Cao cấp',signature:'Đặc trưng',prestige:'Thượng hạng'},knoll:'Mỗi thứ một chỗ.',prod:'Sản phẩm',decor:'Đồ trang trí',show:'Hiển thị',pass:'Thẻ lên máy bay',collection:'Bộ sưu tập',valid:'Hiệu lực',includes:'Bao gồm',boardAria:'Bảng khởi hành các căn bếp. Chọn một bếp để xem màn hình vào cửa.',asOf:'Danh mục tính đến {d} · rev {r}'}
+ko:{depLabel:'출발',dep:'오늘은 어느 주방으로?',colDest:'목적지',colClass:'등급',newTag:'신규',tiers:{basic:'스탠다드',extended:'디럭스',signature:'시그니처',prestige:'프레스티지'},knoll:'하나씩, 제자리에.',prod:'상품',decor:'장식',show:'보기',pass:'탑승권',collection:'컬렉션',valid:'유효 기간',includes:'포함',boardAria:'주방 출발 안내판. 하나를 고르면 해당 주방의 미리보기를 보여줍니다',asOf:'카탈로그 기준 {d} · rev {r}'},
+en:{depLabel:'Departures',dep:'Which kitchen today?',colDest:'Destination',colClass:'Class',newTag:'New',tiers:{basic:'Standard',extended:'Deluxe',signature:'Signature',prestige:'Prestige'},knoll:'Everything in its place.',prod:'Products',decor:'Decor',show:'Show',pass:'Boarding pass',collection:'Collection',valid:'Valid',includes:'Includes',boardAria:'Kitchen departures board. Pick one to preview the kitchen.',asOf:'Catalog as of {d} · rev {r}'},
+ja:{depLabel:'出発',dep:'今日はどのキッチンへ？',colDest:'行き先',colClass:'クラス',newTag:'新着',tiers:{basic:'スタンダード',extended:'デラックス',signature:'シグネチャー',prestige:'プレステージ'},knoll:'ひとつずつ、定位置に。',prod:'商品',decor:'飾り',show:'表示',pass:'搭乗券',collection:'コレクション',valid:'有効期間',includes:'内容',boardAria:'キッチンの出発案内板。選ぶとそのキッチンのプレビューを表示します',asOf:'{d}時点のカタログ · rev {r}'},
+es:{depLabel:'Salidas',dep:'¿A qué cocina hoy?',colDest:'Destino',colClass:'Clase',newTag:'Nuevo',tiers:{basic:'Estándar',extended:'De lujo',signature:'De autor',prestige:'Prestigio'},knoll:'Cada cosa en su sitio.',prod:'Productos',decor:'Decoración',show:'Mostrar',pass:'Tarjeta de embarque',collection:'Colección',valid:'Válido',includes:'Incluye',boardAria:'Panel de salidas de cocinas. Elige una para ver una vista previa de la cocina.',asOf:'Catálogo al {d} · rev {r}'},
+de:{depLabel:'Abflug',dep:'Welche Küche heute?',colDest:'Ziel',colClass:'Klasse',newTag:'Neu',tiers:{basic:'Standard',extended:'Deluxe',signature:'Exklusiv',prestige:'Prestige'},knoll:'Alles an seinem Platz.',prod:'Produkte',decor:'Deko',show:'Anzeigen',pass:'Bordkarte',collection:'Sammlung',valid:'Gültig',includes:'Enthält',boardAria:'Abflugtafel der Küchen. Wähle eine für eine Vorschau der Küche.',asOf:'Katalog, Stand {d} · rev {r}'},
+fr:{depLabel:'Départs',dep:'Quelle cuisine aujourd’hui ?',colDest:'Destination',colClass:'Classe',newTag:'Nouveau',tiers:{basic:'Standard',extended:'Deluxe',signature:'Signature',prestige:'Prestige'},knoll:'Chaque chose à sa place.',prod:'Produits',decor:'Déco',show:'Afficher',pass:'Carte d’embarquement',collection:'Collection',valid:'Valable',includes:'Comprend',boardAria:'Tableau des départs des cuisines. Choisissez-en une pour afficher un aperçu de la cuisine.',asOf:'Catalogue au {d} · rev {r}'},
+th:{depLabel:'ขาออก',dep:'วันนี้ไปครัวไหนดี',colDest:'ปลายทาง',colClass:'ชั้น',newTag:'ใหม่',tiers:{basic:'มาตรฐาน',extended:'ดีลักซ์',signature:'ซิกเนเจอร์',prestige:'เพรสทีจ'},knoll:'ทุกอย่างอยู่ในที่ของมัน',prod:'สินค้า',decor:'ของตกแต่ง',show:'แสดง',pass:'บัตรขึ้นเครื่อง',collection:'คอลเลกชัน',valid:'ใช้ได้',includes:'รวม',boardAria:'กระดานขาออกของครัว เลือกหนึ่งครัวเพื่อดูภาพตัวอย่างครัว',asOf:'แคตตาล็อก ณ {d} · rev {r}'},
+ru:{depLabel:'Вылет',dep:'На какую кухню сегодня?',colDest:'Направление',colClass:'Класс',newTag:'Новое',tiers:{basic:'Стандарт',extended:'Делюкс',signature:'Фирменный',prestige:'Престиж'},knoll:'Всё на своих местах.',prod:'Товары',decor:'Декор',show:'Показать',pass:'Посадочный талон',collection:'Коллекция',valid:'Действует',includes:'Включает',boardAria:'Табло вылетов кухонь. Выберите кухню для предварительного просмотра.',asOf:'Каталог на {d} · rev {r}'},
+mn:{depLabel:'Нислэг',dep:'Өнөөдөр аль гал тогоо руу?',colDest:'Чиглэл',colClass:'Ангилал',newTag:'Шинэ',tiers:{basic:'Стандарт',extended:'Делюкс',signature:'Онцгой',prestige:'Престиж'},knoll:'Бүгд байрандаа.',prod:'Бараа',decor:'Чимэглэл',show:'Харах',pass:'Онгоцны тасалбар',collection:'Цуглуулга',valid:'Хүчинтэй',includes:'Багтсан',boardAria:'Гал тогоонуудын нислэгийн самбар. Нэгийг сонгоод гал тогооны урьдчилсан зургийг үзээрэй.',asOf:'{d}-ны каталог · rev {r}'},
+vi:{depLabel:'Khởi hành',dep:'Hôm nay đến căn bếp nào?',colDest:'Điểm đến',colClass:'Hạng',newTag:'Mới',tiers:{basic:'Tiêu chuẩn',extended:'Cao cấp',signature:'Đặc trưng',prestige:'Thượng hạng'},knoll:'Mỗi thứ một chỗ.',prod:'Sản phẩm',decor:'Đồ trang trí',show:'Hiển thị',pass:'Thẻ lên máy bay',collection:'Bộ sưu tập',valid:'Hiệu lực',includes:'Bao gồm',boardAria:'Bảng khởi hành các căn bếp. Chọn một bếp để xem trước căn bếp.',asOf:'Danh mục tính đến {d} · rev {r}'}
 };
 var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 var S=null, lang=(window.PT_I18N&&window.PT_I18N.lang)||'en', sel=-1, cat='products', depSeen=false, depOn=false, timers=[];
@@ -614,19 +611,10 @@ function board(animate){
 }
 function select(i){
   if(i===sel&&$('.gate-title').textContent) return;
-  sel=i; var k=S.kitchens[i], img=$('.gate-img'), vid=$('.gate-vid');
+  sel=i; var k=S.kitchens[i], img=$('.gate-img');
   [].forEach.call(document.querySelectorAll('#board-rows .row'),function(b,j){ b.setAttribute('aria-pressed',String(j===i)) });
   $('.gate-title').textContent=txt(k.title); $('.gate-sub').textContent=txt(k.subtitle);
-  if(k.video){
-    img.className='gate-img'+(reduce?'':' off'); img.src=k.poster; img.alt=txt(k.title);
-    if(reduce){ vid.className='gate-vid off'; vid.removeAttribute('src'); return }
-    vid.className='gate-vid'; vid.poster=k.poster;
-    if(vid.getAttribute('src')!==k.video){ vid.src=k.video; }
-    vid.muted=true; if(depOn){ var pr=vid.play(); if(pr&&pr.catch) pr.catch(function(){}) }
-  } else {
-    vid.className='gate-vid off'; vid.pause(); vid.removeAttribute('src'); vid.load();
-    img.className='gate-img contain'; img.src=k.preview.src; img.alt=txt(k.title);
-  }
+  img.width=k.preview.w; img.height=k.preview.h; img.alt=txt(k.title); img.src=k.preview.src;
 }
 function knoll(drop){
   var g=$('#knoll-grid'), list=S[cat];
@@ -661,10 +649,8 @@ fetch('assets/catalog/snapshot.json').then(function(r){return r.json()}).then(fu
   S=s; render(false);
   if(!('IntersectionObserver' in window)) return;
   new IntersectionObserver(function(es){ es.forEach(function(e){
-    depOn=e.isIntersecting; var v=$('.gate-vid');
-    if(depOn){ if(!depSeen){ depSeen=true; if(!reduce){ clearTimers(); [].forEach.call($('#board-rows').children,function(li,i){ flipRow(li,i*110) }) } }
-      if(v.getAttribute('src')&&!reduce){ var pr=v.play(); if(pr&&pr.catch) pr.catch(function(){}) } }
-    else v.pause();
+    depOn=e.isIntersecting;
+    if(depOn&&!depSeen){ depSeen=true; if(!reduce){ clearTimers(); [].forEach.call($('#board-rows').children,function(li,i){ flipRow(li,i*110) }) } }
   }) },{threshold:.25}).observe($('#departures'));
   var kseen=false; new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting&&!kseen){ kseen=true; knoll(true) } }) },{threshold:.2}).observe($('#knolling'));
   if(!reduce) setInterval(function(){ if(!depOn||document.hidden) return; var rows=$('#board-rows').children; var i=(Math.random()*rows.length)|0; flipRow(rows[i],0) },4800);
