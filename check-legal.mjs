@@ -2,19 +2,31 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {resolve,dirname} from 'node:path';
 const langs=['ko','en','ja','th','ru','es','mn'];
+const operator='Sanmaru Studio';
+const supportEmail='hello@sanmarustudio.com';
+const personalContact=/전\s*성\s*훈|seong[\s-]*hun[\s-]*jeon|jeon[\s-]*seong[\s-]*hun|jsh097610@gmail\.com/i;
 const data=JSON.parse(await readFile('legal-content.json','utf8'));
 assert.deepEqual(Object.keys(data).sort(),[...langs].sort());
+for(const file of ['legal-content.json','build-legal.mjs'])assert(!personalContact.test(await readFile(file,'utf8')),`Personal contact remains: ${file}`);
 assert.equal(await readFile('public/legal.css','utf8'),await readFile('legal.css','utf8'));
 for(const file of ['public/index.html','public/privacy.html','public/support.html','public/terms.html']){
  const html=await readFile(file,'utf8');assert(html.includes('Pantrip') && !html.includes('ExpiryCheck'));
 }
 for(const kind of ['privacy','support','terms']){
  const html=await readFile(`public/${kind}.html`,'utf8');
+ assert(!personalContact.test(html));
+ assert(html.includes(`<p>${operator}<br><a href="mailto:${supportEmail}">${supportEmail}</a></p>`));
  for(const lang of langs)assert(html.includes(`<link rel="alternate" hreflang="${lang}" href="https://pantrip.app/${kind}/${lang}">`));
  assert(html.includes(`<link rel="alternate" hreflang="x-default" href="https://pantrip.app/${kind}">`));
 }
 let checked=0;
 for(const lang of langs){
+ const source=JSON.stringify(data[lang]);
+ assert(!personalContact.test(source));
+ assert.deepEqual([...new Set(source.match(/[\w.+-]+@[\w.-]+\.[a-z]{2,}/gi))],[supportEmail]);
+ assert(data[lang].sections[0][1][0].includes(operator));
+ assert(data[lang].terms[0][1][0].includes(operator));
+ assert(data[lang].sections[9][1].some(p=>p.includes('2026-10-16')&&p.includes(operator)&&p.includes(supportEmail)));
  assert.equal(data[lang].sections.length,10);
  assert.equal(data[lang].providers.length,7);
  assert.equal(data[lang].support.length,5);
@@ -36,7 +48,10 @@ for(const lang of langs){
   assert(html.includes(`<link rel="canonical" href="https://pantrip.app/${kind}/${lang}">`));
   for(const code of langs)assert(html.includes(`<link rel="alternate" hreflang="${code}" href="https://pantrip.app/${kind}/${code}">`));
   assert(html.includes(`<link rel="alternate" hreflang="x-default" href="https://pantrip.app/${kind}">`));
-  assert(html.includes('jsh097610@gmail.com'));
+  assert(!personalContact.test(html),`Personal contact remains: ${file}`);
+  assert(html.includes(`<p>${operator}<br><a href="mailto:${supportEmail}">${supportEmail}</a></p>`));
+  assert(html.includes(`${data[lang].updated} · 2026-10-16`));
+  assert.deepEqual([...new Set([...html.matchAll(/href="mailto:([^"]+)"/g)].map(m=>m[1]))],[supportEmail]);
   assert(html.includes('Pantrip') && !html.includes('ExpiryCheck'));
   assert(!/<script|__\w+__|YOUR_|localhost|127\.0\.0\.1/i.test(html));
   assert.equal((html.match(/aria-current="page"/g)||[]).length,1);
@@ -50,4 +65,4 @@ for(const lang of langs){
   checked++;
  }
 }
-console.log(`PASS: ${checked} static localized pages; language, content, links and no tracking scripts.`);
+console.log(`PASS: ${checked} localized + 3 index pages; studio contact, language, content, links and no tracking scripts.`);

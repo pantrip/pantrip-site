@@ -70,7 +70,8 @@ const order=['id="s1"','id="s2"','id="s3"','id="departures"','id="knolling"','id
 assert(order.every((at,i)=>at>=0&&(i===0||at>order[i-1])),'Sections follow the story, then the footer');
 const footer=html.slice(html.indexOf('<footer class="foot">'),html.indexOf('</footer>'));
 for(const page of ['privacy.html','terms.html','support.html']) assert(footer.includes(`href="${page}"`),`Footer links ${page}`);
-assert(footer.includes('href="mailto:jsh097610@gmail.com">jsh097610@gmail.com</a>'),'Contact email in the footer');
+assert(footer.includes('href="mailto:hello@sanmarustudio.com">hello@sanmarustudio.com</a>'),'Company contact email in the footer');
+assert(!/jsh097610|hoonie@fromkorea\.academy|Seonghun Jeon|전성훈/i.test(html),'No personal operator name or contact in the homepage');
 assert(/<details class="disclosure" id="google-signin">\s*<summary data-t="gsiQ">Google 로그인은 어디에 사용하나요\?<\/summary>/.test(footer),'Collapsed Google sign-in explanation');
 assert(!/<details[^>]*\bopen\b/.test(html),'Disclosures start collapsed');
 
@@ -82,6 +83,10 @@ assert.deepEqual(local(vm.runInNewContext(html.match(/var SUP=(\[[^\]]+\]);/)[1]
 assert.deepEqual([...html.matchAll(/<option value="(\w+)" lang="\1">/g)].map(m=>m[1]),LANGS,'Language selector lists all ten');
 const L=block('L'),CR=block('CR'),UI=block('UI');
 const FT=JSON.parse(html.match(/var FT=(\{.*\});\n/)[1]);
+const operators={ko:'운영자 Sanmaru Studio',en:'Operator: Sanmaru Studio',ja:'運営者 Sanmaru Studio',es:'Responsable: Sanmaru Studio',de:'Betreiber: Sanmaru Studio',fr:'Exploitant : Sanmaru Studio',th:'ผู้ดำเนินการ Sanmaru Studio',ru:'Оператор: Sanmaru Studio',mn:'Үйлчилгээ эрхлэгч: Sanmaru Studio',vi:'Đơn vị vận hành: Sanmaru Studio'};
+assert(footer.includes(`<span data-t="operator">${FT.ko.operator}</span>`),'Static Korean operator matches its catalog');
+for(const lang of LANGS) assert.equal(FT[lang].operator,operators[lang],`Company operator in ${lang}`);
+assert(!/data-t(?:-\w+)?=/.test(footer.match(/<a href="mailto:[^>]+>/)[0]),'The company contact stays the same in every language');
 for(const [name,cat] of [['L',L],['CR',CR],['UI',UI],['FT',FT]]) {
  assert.deepEqual(Object.keys(cat).sort(),[...LANGS].sort(),`${name} covers every language`);
  const keys=JSON.stringify(Object.keys(cat.ko).sort());
