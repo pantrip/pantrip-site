@@ -6,7 +6,30 @@ import vm from 'node:vm';
 const html = readFileSync(new URL('./public/index.html', import.meta.url), 'utf8');
 const context = { window: {} };
 vm.runInNewContext(html.match(/<script id="story-geometry">([\s\S]*?)<\/script>/)[1], context);
-const { progress, follow, fitTags } = context.window.PT_STORY;
+const { progress, follow, fitTags, quietDelay } = context.window.PT_STORY;
+
+assert.equal(quietDelay(-Infinity, 0), 0, 'No input permits initial preparation');
+assert.equal(quietDelay(0, 100), 80, 'Preparation waits until 180 ms after the latest input');
+assert.equal(quietDelay(100, 179), 101, 'New input restarts the quiet interval rather than using a fixed timeout');
+assert.equal(quietDelay(100, 279), 1);
+assert.equal(quietDelay(100, 280), 0);
+assert.equal(quietDelay(100, 900), 0);
+
+// Drive the production async gate: input during an existing wait postpones background work again.
+let clock = 0;
+const timers = [], gateAt = html.indexOf('  let lastInput =');
+const gate = { window: { PT_STORY: { quietDelay } }, scrollY: 0, performance: { now: () => clock }, root: { classList: { contains: () => true } }, setTimeout: (resolve, delay) => timers.push({ resolve, delay }) };
+vm.runInNewContext(html.slice(gateAt, html.indexOf('\n  renderer.setSize', gateAt)) + '\nwindow.waitForQuiet = waitForQuiet; window.noteInput = noteInput;', gate);
+gate.window.noteInput();
+const waiting = gate.window.waitForQuiet();
+assert.equal(timers[0].delay, 180);
+clock = 100; gate.scrollY = 400; gate.window.noteInput();
+clock = 180; timers.shift().resolve(); await Promise.resolve();
+assert.equal(timers[0].delay, 100, 'Input while waiting restarts the required quiet interval');
+clock = 280; gate.scrollY = 600; timers.shift().resolve(); await Promise.resolve();
+assert.equal(timers[0].delay, 180, 'A changed scroll position is caught even before its scroll event arrives');
+clock = 460; timers.shift().resolve(); await waiting;
+assert.equal(timers.length, 0);
 
 assert.equal(progress(10, 3300, 1000), 0);
 assert.equal(progress(-1150, 3300, 1000), 0.5);
@@ -81,4 +104,5 @@ for (const state of [bootstrap(false, false), bootstrap(true, true)]) {
 assert(html.includes('html.static:not(.fallback) #s1'), 'Only initial static mode collapses the long scroll distances');
 assert([...html.matchAll(/<picture class="still">([\s\S]*?)<\/picture>/g)].every(match => !match[1].includes('loading="lazy"')), 'The three small fallback posters load before entering distant story sections');
 assert(html.includes('.tag{transform-origin:0 0}'), 'Scaled dense labels use the same top-left origin as their measured boxes');
-console.log('PASS: story progress, finite settling, collision-free day badges, stable late-loading fallback');
+assert(html.includes('.stage:not([data-ready]) .anim-only,.stage:not([data-ready]) .anim-only *{visibility:hidden!important}'), 'Live overlays and their descendants remain invisible until layout and drawing are complete');
+console.log('PASS: input-aware preparation gate, story progress, finite settling, collision-free day badges, stable late-loading fallback');
