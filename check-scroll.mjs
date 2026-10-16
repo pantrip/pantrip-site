@@ -63,6 +63,23 @@ for (const target of [0.38, 0.18]) {
   assert(count < 60, 'S3 catches up in a finite interval');
   assert.equal(labels.at(-1), target === 0.38 ? null : 'D-2', 'Consumed food disappears and returns when scrolling back');
 }
+let maxSettlingFrames = 0;
+for (const firstDt of [1 / 60, 0.1]) for (const [start, target] of [[0, 1], [1, 0], [0.08, 0.97], [0.97, 0.08], [0.12, 0.96], [0.96, 0.12]]) {
+  const completed = new Set(); p = start; count = 0;
+  do {
+    timeline.window.tags3Update(p, timeline.window.dayAt(p), { x: 0, y: 0, w: 300, h: 240 });
+    tags3.forEach((tag, i) => { if (tag.label === '✓') completed.add(i); });
+    if (p === target) break;
+    const next = follow(p, target, count === 0 ? firstDt : 1 / 60, false, false);
+    assert(Math.abs(next - p) <= 0.040000000001, 'Large S3 moves cannot skip a completion interval in one frame');
+    p = next;
+  } while (++count < 120);
+  assert.equal(completed.size, 6, `All six food completion badges appear while moving ${start} to ${target}`);
+  assert.equal(p, target, 'Full-range S3 moves settle exactly');
+  assert(count < 60, 'Even full-range S3 moves settle within 60 frames');
+  maxSettlingFrames = Math.max(maxSettlingFrames, count);
+}
+console.log(`PASS: all six S3 completion badges survive large forward/reverse moves and idle resume (max ${maxSettlingFrames} settling frames)`);
 
 function verifyBoxes(tags, bounds) {
   const boxes = fitTags(tags, bounds);
