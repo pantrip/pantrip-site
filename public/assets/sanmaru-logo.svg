@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 832 148" role="img" aria-label="Sanmaru Studio" fill="#202224" color="#202224"><title>Sanmaru Studio</title><g transform="translate(0 30) scale(.8)"><path d="M0 127 102 2 134 42 94 64C78 72 78 84 96 94 119 107 120 111 102 119L88 127ZM179 27 256 127H184C186 111 165 101 145 91L122 82C111 77 114 69 128 61Z"/></g><g transform="translate(252 0)"><path d="M58 10 48 23C38 14 19 12 16 23 13 34 58 30 58 53 58 81 17 86 0 65L11 53C23 68 43 68 43 56 43 45 1 49 1 25 1 1 38-8 58 10Z"/>
+<path fill-rule="evenodd" d="M73 6V76H59V66C51 77 40 80 28 77 9 74 0 58 0 40 0 19 14 2 35 2 45 2 53 6 59 14V6ZM15 40C15 54 23 64 37 64S59 54 59 40 51 16 37 16 15 26 15 40Z" transform="translate(73)"/>
+<path d="M0 76V6H14V16C23 3 35-1 49 4 65 9 71 22 71 39V76H56V39C56 23 49 16 38 16 23 16 15 25 15 40V76Z" transform="translate(160)"/>
+<path d="M0 76V31C0 8 23-8 43 10L50 19 58 10C78-8 101 8 101 31V76H86V32C86 19 77 12 69 21L50 42 32 21C24 12 15 19 15 32V76Z" transform="translate(245)"/>
+<path fill-rule="evenodd" d="M73 6V76H59V66C51 77 40 80 28 77 9 74 0 58 0 40 0 19 14 2 35 2 45 2 53 6 59 14V6ZM15 40C15 54 23 64 37 64S59 54 59 40 51 16 37 16 15 26 15 40Z" transform="translate(360)"/>
+<path d="M0 76V6H15V21C23 6 36 2 49 6V22C29 17 15 30 15 49V76Z" transform="translate(447)"/>
+<path d="M0 6H15V46C15 70 52 70 52 46V6H67V46C67 89 0 89 0 46Z" transform="translate(510)"/><g transform="translate(173 111)" fill="none" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round">
+<path d="M23 7C18-1 3 1 3 9S23 15 23 23 7 33 2 25"/>
+<path d="M52-7V23C52 29 55 31 61 29M44 3H62"/>
+<path d="M84 3V20C84 33 106 33 106 20V3"/>
+<path d="M152-9V30M152 16C152-2 126-2 126 16S152 34 152 16Z"/>
+<path d="M178 4V30M178-8V-7"/>
+<path d="M229 16C229-2 203-2 203 16S229 34 229 16Z"/>
+</g></g></svg>

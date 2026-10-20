@@ -243,7 +243,10 @@ html[lang="ja"] .pass-fields dd,html[lang="th"] .pass-fields dd,html[lang="ko"] 
 .foot-brand img{width:40px;height:40px;border-radius:10px;display:block}
 .foot a{color:var(--ink);text-underline-offset:3px}
 .foot-links{display:flex;flex-wrap:wrap;gap:8px 20px}
-.operator{display:flex;flex-wrap:wrap;gap:6px 12px}
+.operator{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
+.company-logo{display:inline-flex;align-items:center;min-height:32px}
+.company-logo img{display:block;width:135px;height:24px}
+.company-logo:focus-visible{outline:2px solid currentColor;outline-offset:5px}
 .credits,.disclosure{flex-basis:100%}
 .disclosure summary{cursor:pointer;width:max-content;max-width:100%;color:var(--ink)}
 .disclosure p{margin:12px 0 0;max-width:72ch;font-size:13px;line-height:1.75}
@@ -413,7 +416,7 @@ else d.classList.add('static');})();
 <footer class="foot">
   <div class="foot-brand"><img src="assets/app-icon.png" alt="" width="40" height="40">Pantrip</div>
   <nav class="foot-links" data-t-aria="footNav" aria-label="정책과 지원"><a id="privacy-link" href="privacy.html" data-t="privacy">개인정보 처리방침</a><a href="terms.html" data-t="terms">서비스 이용약관</a><a href="support.html" data-t="support">고객지원 및 계정 삭제</a></nav>
-  <div class="operator"><span data-t="operator">운영자 Sanmaru Studio</span><a href="mailto:hello@sanmarustudio.com">hello@sanmarustudio.com</a></div>
+  <div class="operator"><a class="company-logo" href="https://sanmarustudio.com/"><img src="assets/sanmaru-logo-light.svg" alt="Sanmaru Studio" width="135" height="24" loading="lazy"></a><span data-t="operator">운영자 Sanmaru Studio</span><a href="mailto:hello@sanmarustudio.com">hello@sanmarustudio.com</a></div>
   <small>© 2026 Pantrip</small>
   <small class="asof" id="asof"></small>
   <details class="disclosure" id="google-signin">

@@ -53,7 +53,7 @@ for(const [rel,size,name] of [['icon',32,'favicon-32.png'],['icon',16,'favicon-1
 assert(!html.includes('apps.apple.com'),'No fake download URL');
 assert(!/\/admin|swagger/i.test(html),'No admin or API documentation links');
 assert(!/googletagmanager|gtag\(|google-analytics|adsbygoogle|amplitude|plausible|clarity\.ms|facebook\.net/i.test(html),'No analytics or ad scripts');
-const allowed=['cdn.jsdelivr.net','fonts.googleapis.com','commons.wikimedia.org','creativecommons.org','poly.pizza','schema.org'];
+const allowed=['cdn.jsdelivr.net','fonts.googleapis.com','commons.wikimedia.org','creativecommons.org','poly.pizza','schema.org','sanmarustudio.com'];
 for(const [,h] of html.matchAll(/https:\/\/([a-z0-9.-]+)\//g)) assert(allowed.includes(h)||/(^|\.)pantrip\.app$/.test(h),`Unexpected host ${h}`);
 for(const [,src] of html.matchAll(/<script[^>]*\ssrc="([^"]+)"/g)) assert.fail(`No script files besides the import map: ${src}`);
 const importMap=JSON.parse(html.match(/<script type="importmap">([^<]+)<\/script>/)[1]);
@@ -71,6 +71,7 @@ assert(order.every((at,i)=>at>=0&&(i===0||at>order[i-1])),'Sections follow the s
 const footer=html.slice(html.indexOf('<footer class="foot">'),html.indexOf('</footer>'));
 for(const page of ['privacy.html','terms.html','support.html']) assert(footer.includes(`href="${page}"`),`Footer links ${page}`);
 assert(footer.includes('href="mailto:hello@sanmarustudio.com">hello@sanmarustudio.com</a>'),'Company contact email in the footer');
+assert(footer.includes('<a class="company-logo" href="https://sanmarustudio.com/"><img src="assets/sanmaru-logo-light.svg" alt="Sanmaru Studio" width="135" height="24" loading="lazy"></a>'),'Secondary company logo links to the company homepage');
 assert(!/jsh097610|hoonie@fromkorea\.academy|Seonghun Jeon|전성훈/i.test(html),'No personal operator name or contact in the homepage');
 assert(/<details class="disclosure" id="google-signin">\s*<summary data-t="gsiQ">Google 로그인은 어디에 사용하나요\?<\/summary>/.test(footer),'Collapsed Google sign-in explanation');
 assert(!/<details[^>]*\bopen\b/.test(html),'Disclosures start collapsed');
