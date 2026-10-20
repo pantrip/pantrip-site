@@ -19,6 +19,13 @@ for(const kind of ['privacy','support','terms']){
  for(const lang of langs)assert(html.includes(`<link rel="alternate" hreflang="${lang}" href="https://pantrip.app/${kind}/${lang}">`));
  assert(html.includes(`<link rel="alternate" hreflang="x-default" href="https://pantrip.app/${kind}">`));
 }
+for(const file of ['public/index.html',...['privacy','support','terms'].flatMap(kind=>[`public/${kind}.html`,...langs.map(lang=>`public/${kind}/${lang}.html`)])]){
+ const html=await readFile(file,'utf8');
+ const footer=html.split('<footer')[1].split('</footer>')[0];
+ assert(footer.includes('<a class="company-logo" href="https://sanmarustudio.com/">'),`Company home link: ${file}`);
+ for(const [,src] of footer.matchAll(/(?:src|srcset)="([^"]+sanmaru-logo[^"]*\.svg)"/g))await readFile(resolve(dirname(file),src));
+ assert(footer.includes('alt="Sanmaru Studio" width="135" height="24"'),'Company logo accessible name and dimensions');
+}
 let checked=0;
 for(const lang of langs){
  const source=JSON.stringify(data[lang]);
